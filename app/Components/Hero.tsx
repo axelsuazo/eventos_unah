@@ -40,6 +40,7 @@ export default function Hero() {
           <div className="mt-4 rounded-2xl bg-white p-5 text-[#183972]">
             <p className="text-sm font-semibold text-gray-500">Próximo evento</p>
             <h2 className="mt-1 text-xl font-bold">Feria Académica UNAH</h2>
+        
             <p className="mt-2 text-sm text-gray-600">Ciudad Universitaria · 10 de junio de 2026</p>
           </div>
         </div>

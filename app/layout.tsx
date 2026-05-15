@@ -1,4 +1,6 @@
 import type { Metadata } from "next";
+import { Toaster } from "sonner";
+import { ThemeProviderContext } from "@/app/context/ThemeContext";
 import "./globals.css";
 
 export const metadata: Metadata = {
@@ -16,8 +18,13 @@ export default function RootLayout({
   children: React.ReactNode;
 }>) {
   return (
-    <html lang="es">
-      <body>{children}</body>
+    <html lang="es" suppressHydrationWarning>
+      <body>
+        <ThemeProviderContext>
+          {children}
+          <Toaster richColors position="top-right" />
+        </ThemeProviderContext>
+      </body>
     </html>
   );
 }

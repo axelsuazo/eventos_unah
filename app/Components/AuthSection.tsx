@@ -1,6 +1,29 @@
 "use client";
 
 import { type FormEvent, useState } from "react";
+import { toast } from "sonner";
+
+type RegisteredUser = {
+  name: string;
+  email: string;
+};
+
+const usersStorageKey = "unah-users";
+
+function getRegisteredUsers() {
+  if (typeof window === "undefined") return [] as RegisteredUser[];
+
+  const savedUsers = localStorage.getItem(usersStorageKey);
+
+  if (!savedUsers) return [] as RegisteredUser[];
+
+  try {
+    return JSON.parse(savedUsers) as RegisteredUser[];
+  } catch {
+    localStorage.removeItem(usersStorageKey);
+    return [] as RegisteredUser[];
+  }
+}
 
 export default function AuthSection() {
   const [loginMessage, setLoginMessage] = useState("");
@@ -15,10 +38,16 @@ export default function AuthSection() {
 
     if (!email || !password) {
       setLoginMessage("Escribe el correo y la contraseña para continuar.");
+      toast.error("Datos incompletos", {
+        description: "Escribe el correo y la contraseña para continuar.",
+      });
       return;
     }
 
     setLoginMessage("Datos recibidos. Este login queda como demostración visual.");
+    toast.success("Ingreso recibido", {
+      description: "El login queda como demostración visual del sistema.",
+    });
   }
 
   function handleRegister(event: FormEvent<HTMLFormElement>) {
@@ -31,10 +60,34 @@ export default function AuthSection() {
 
     if (!name || !email || !password) {
       setRegisterMessage("Completa todos los campos para crear la cuenta.");
+      toast.error("Registro incompleto", {
+        description: "Completa nombre, correo y contraseña.",
+      });
       return;
     }
 
-    setRegisterMessage("Registro recibido. La conexión con backend queda pendiente.");
+    const users = getRegisteredUsers();
+    const userExists = users.some(
+      (user) => user.email.toLowerCase() === email.toLowerCase()
+    );
+
+    if (!userExists) {
+      const updatedUsers = [...users, { name, email }];
+      localStorage.setItem(usersStorageKey, JSON.stringify(updatedUsers));
+    }
+
+    setRegisterMessage(
+      userExists
+        ? "Este correo ya estaba registrado para recibir notificaciones."
+        : "Registro recibido. El usuario recibirá notificaciones de nuevos eventos."
+    );
+
+    toast.success(userExists ? "Usuario ya registrado" : "Usuario registrado", {
+      description: userExists
+        ? "El correo ya está guardado en el sistema."
+        : "El correo quedó guardado para notificaciones de eventos.",
+    });
+
     event.currentTarget.reset();
   }
 
@@ -87,54 +140,7 @@ export default function AuthSection() {
           </form>
         </div>
 
-        <div id="register" className="rounded-3xl bg-[#183972] p-8 text-white shadow-md">
-          <span className="rounded-full bg-white/10 px-4 py-2 text-sm font-bold text-yellow-200">
-            Registro
-          </span>
-
-          <h2 className="mt-4 text-3xl font-extrabold">Crear cuenta</h2>
-
-          <p className="mt-2 text-sm text-blue-100">
-            Formulario inicial para registrar nuevos usuarios del sistema de
-            eventos.
-          </p>
-
-          <form onSubmit={handleRegister} className="mt-6 space-y-4">
-            <input
-              type="text"
-              name="registerName"
-              placeholder="Nombre completo"
-              className="w-full rounded-2xl border border-white/20 bg-white px-4 py-3 text-sm text-gray-800 outline-none focus:ring-4 focus:ring-yellow-300/40"
-            />
-
-            <input
-              type="email"
-              name="registerEmail"
-              placeholder="Correo institucional"
-              className="w-full rounded-2xl border border-white/20 bg-white px-4 py-3 text-sm text-gray-800 outline-none focus:ring-4 focus:ring-yellow-300/40"
-            />
-
-            <input
-              type="password"
-              name="registerPassword"
-              placeholder="Contraseña"
-              className="w-full rounded-2xl border border-white/20 bg-white px-4 py-3 text-sm text-gray-800 outline-none focus:ring-4 focus:ring-yellow-300/40"
-            />
-
-            {registerMessage && (
-              <p className="rounded-2xl bg-white/10 px-4 py-3 text-sm font-semibold text-white">
-                {registerMessage}
-              </p>
-            )}
-
-            <button
-              type="submit"
-              className="w-full rounded-full bg-[#f5c400] px-5 py-3 text-sm font-bold text-[#183972] transition hover:bg-yellow-300"
-            >
-              Registrarse
-            </button>
-          </form>
-        </div>
+       
       </div>
     </section>
   );

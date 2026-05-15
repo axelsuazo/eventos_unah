@@ -8,11 +8,15 @@ import {
   useState,
 } from "react";
 import EventCard from "@/app/Components/EventCard";
+import EventCarousel from "@/app/Components/EventCarousel";
+import { toast } from "sonner";
+
 import {
   categories,
   events as defaultEvents,
   type EventItem,
 } from "@/app/data/events";
+
 import {
   AlertDialog,
   AlertDialogAction,
@@ -56,25 +60,13 @@ function isEndDateValid(startDate: string, endDate: string) {
   return new Date(endDate).getTime() >= new Date(startDate).getTime();
 }
 
-function getInitialEvents() {
-  if (typeof window === "undefined") return defaultEvents;
-
-  const savedEvents = localStorage.getItem(storageKey);
-
-  if (!savedEvents) return defaultEvents;
-
-  try {
-    return JSON.parse(savedEvents) as EventItem[];
-  } catch {
-    localStorage.removeItem(storageKey);
-    return defaultEvents;
-  }
-}
-
 export default function EventManager() {
-  const [events, setEvents] = useState<EventItem[]>(getInitialEvents);
+  const [events, setEvents] = useState<EventItem[]>(defaultEvents);
+  const [isLoaded, setIsLoaded] = useState(false);
   const [searchText, setSearchText] = useState("");
   const [selectedCategory, setSelectedCategory] = useState("Todas");
+  const [adminSearchText, setAdminSearchText] = useState("");
+  const [adminCategory, setAdminCategory] = useState("Todas");
   const [currentPage, setCurrentPage] = useState(1);
   const [selectedEvent, setSelectedEvent] = useState<EventItem | null>(null);
   const [form, setForm] = useState<EventForm>(emptyEvent);
@@ -82,26 +74,59 @@ export default function EventManager() {
   const [formMessage, setFormMessage] = useState("");
 
   useEffect(() => {
-    localStorage.setItem(storageKey, JSON.stringify(events));
-  }, [events]);
+    const savedEvents = localStorage.getItem(storageKey);
+    if (savedEvents) {
+      try {
+        setEvents(JSON.parse(savedEvents));
+      } catch (error) {
+        console.error("Error loading events from storage:", error);
+        localStorage.removeItem(storageKey);
+      }
+    }
+    setIsLoaded(true);
+  }, []);
+
+  useEffect(() => {
+    if (isLoaded) {
+      localStorage.setItem(storageKey, JSON.stringify(events));
+    }
+  }, [events, isLoaded]);
 
   const filteredEvents = useMemo(() => {
     const text = searchText.trim().toLowerCase();
 
-    return events.filter((event) => {
+    return events.filter((eventItem) => {
       const isSameCategory =
-        selectedCategory === "Todas" || event.category === selectedCategory;
+        selectedCategory === "Todas" || eventItem.category === selectedCategory;
 
       const isSameSearch =
         text === "" ||
-        event.title.toLowerCase().includes(text) ||
-        event.description.toLowerCase().includes(text) ||
-        event.location.toLowerCase().includes(text) ||
-        event.organizer.toLowerCase().includes(text);
+        eventItem.title.toLowerCase().includes(text) ||
+        eventItem.description.toLowerCase().includes(text) ||
+        eventItem.location.toLowerCase().includes(text) ||
+        eventItem.organizer.toLowerCase().includes(text);
 
       return isSameCategory && isSameSearch;
     });
   }, [events, searchText, selectedCategory]);
+
+  const filteredAdminEvents = useMemo(() => {
+    const text = adminSearchText.trim().toLowerCase();
+
+    return events.filter((eventItem) => {
+      const isSameCategory =
+        adminCategory === "Todas" || eventItem.category === adminCategory;
+
+      const isSameSearch =
+        text === "" ||
+        eventItem.title.toLowerCase().includes(text) ||
+        eventItem.description.toLowerCase().includes(text) ||
+        eventItem.location.toLowerCase().includes(text) ||
+        eventItem.organizer.toLowerCase().includes(text);
+
+      return isSameCategory && isSameSearch;
+    });
+  }, [events, adminSearchText, adminCategory]);
 
   const totalPages = Math.max(
     1,
@@ -110,6 +135,7 @@ export default function EventManager() {
 
   const safePage = Math.min(currentPage, totalPages);
   const firstEventIndex = (safePage - 1) * eventsPerPage;
+
   const visibleEvents = filteredEvents.slice(
     firstEventIndex,
     firstEventIndex + eventsPerPage
@@ -164,12 +190,15 @@ export default function EventManager() {
     if (!form.description.trim()) return "Escribe una descripción del evento.";
     if (!form.date) return "Selecciona la fecha de inicio.";
     if (!form.location.trim()) return "Escribe la ubicación del evento.";
+
     if (!isEndDateValid(form.date, form.endDate)) {
       return "La fecha final no puede ser menor que la fecha de inicio.";
     }
 
     return "";
   }
+
+
 
   function handleSubmit(event: FormEvent<HTMLFormElement>) {
     event.preventDefault();
@@ -187,6 +216,11 @@ export default function EventManager() {
           eventItem.id === editingId ? { id: editingId, ...form } : eventItem
         )
       );
+
+      toast.success("Evento actualizado", {
+        description: `${form.title} fue modificado correctamente.`,
+      });
+
       resetForm();
       return;
     }
@@ -200,6 +234,11 @@ export default function EventManager() {
     resetForm();
     setSelectedCategory("Todas");
     setCurrentPage(1);
+
+    toast.success("Evento registrado", {
+      description: `${newEvent.title} fue agregado correctamente.`,
+    });
+
   }
 
   function handleEdit(eventItem: EventItem) {
@@ -215,9 +254,17 @@ export default function EventManager() {
   }
 
   function handleDelete(id: number) {
+    const deletedEvent = events.find((eventItem) => eventItem.id === id);
+
     setEvents((currentEvents) =>
       currentEvents.filter((eventItem) => eventItem.id !== id)
     );
+
+    toast.success("Evento eliminado", {
+      description: deletedEvent
+        ? `${deletedEvent.title} fue eliminado correctamente.`
+        : "El evento fue eliminado correctamente.",
+    });
 
     if (editingId === id) resetForm();
   }
@@ -276,6 +323,7 @@ export default function EventManager() {
                   className="w-full rounded-2xl border border-gray-300 bg-gray-50 px-4 py-3 text-sm outline-none transition focus:border-[#183972] focus:ring-4 focus:ring-[#183972]/10"
                 >
                   <option>Todas</option>
+
                   {categories.map((category) => (
                     <option key={category}>{category}</option>
                   ))}
@@ -301,16 +349,15 @@ export default function EventManager() {
             </div>
           </div>
 
+          <EventCarousel events={filteredEvents} onOpen={setSelectedEvent} />
+
           <div className="mt-8 flex flex-col gap-3 text-sm text-gray-600 sm:flex-row sm:items-center sm:justify-between">
             <p>
               Mostrando <strong>{visibleEvents.length}</strong> de{" "}
               <strong>{filteredEvents.length}</strong> eventos encontrados.
             </p>
 
-            <p>
-              Página <strong>{safePage}</strong> de{" "}
-              <strong>{totalPages}</strong>
-            </p>
+            
           </div>
 
           {visibleEvents.length === 0 ? (
@@ -325,10 +372,10 @@ export default function EventManager() {
             </div>
           ) : (
             <div className="mt-8 grid gap-8 md:grid-cols-2 xl:grid-cols-3">
-              {visibleEvents.map((event) => (
+              {visibleEvents.map((eventItem) => (
                 <EventCard
-                  key={event.id}
-                  event={event}
+                  key={eventItem.id}
+                  event={eventItem}
                   onOpen={setSelectedEvent}
                 />
               ))}
@@ -388,7 +435,8 @@ export default function EventManager() {
 
               <p className="mt-3 max-w-2xl text-gray-600">
                 Desde esta sección se pueden registrar, modificar y eliminar
-                eventos. La información se guarda de forma local en el navegador.
+                eventos. La información se guarda de forma local en el
+                navegador.
               </p>
             </div>
 
@@ -405,7 +453,7 @@ export default function EventManager() {
             </div>
           </div>
 
-          <div className="grid gap-8 lg:grid-cols-[420px_1fr]">
+          <div className="grid gap-8 lg:grid-cols-2">
             <form
               onSubmit={handleSubmit}
               className="rounded-3xl bg-gray-50 p-6 shadow-md ring-1 ring-gray-200"
@@ -505,7 +553,7 @@ export default function EventManager() {
                     <img
                       src={form.image}
                       alt="Vista previa del evento"
-                      className="mt-3 h-32 w-full rounded-md object-cover"
+                      className="mt-3 h-auto w-full rounded-md object-cover"
                     />
                   )}
                 </div>
@@ -551,10 +599,13 @@ export default function EventManager() {
                 </label>
               </div>
 
-              <div className="mt-6 flex flex-col gap-3">
+              <div className="mt-10 flex flex-col gap-3">
+              <p className="text-center text-m text-gray-600">
+                Al guardar, el evento se mostrará en la lista pública y administrativa. Desde la administración podrás modificarlo o eliminarlo cuando quieras.
+              </p>
                 <button
                   type="submit"
-                  className="block w-full rounded-full bg-[#1F3A69] px-4 py-3 font-bold text-white hover:bg-yellow-500"
+                  className="mt-10 block w-full rounded-full bg-[#1F3A69] px-4 py-3 font-bold text-white hover:bg-yellow-500"
                 >
                   {editingId ? "Guardar cambios" : "Registrar nuevo evento"}
                 </button>
@@ -580,91 +631,161 @@ export default function EventManager() {
                 </p>
               </div>
 
-              <div className="divide-y divide-gray-200">
-                {events.map((eventItem) => (
-                  <div
-                    key={eventItem.id}
-                    className="grid gap-4 p-5 md:grid-cols-[120px_1fr_auto] md:items-center"
+              <div className="grid gap-4 border-b border-gray-200 p-5 md:grid-cols-[1fr_220px]">
+                <label className="block">
+                  <span className="mb-2 block text-sm font-bold text-[#183972]">
+                    Buscar en admin
+                  </span>
+
+                  <input
+                    type="search"
+                    value={adminSearchText}
+                    onChange={(event) => setAdminSearchText(event.target.value)}
+                    placeholder="Buscar por título, descripción, lugar u organizador..."
+                    className="w-full rounded-2xl border border-gray-300 bg-gray-50 px-4 py-3 text-sm outline-none transition focus:border-[#183972] focus:ring-4 focus:ring-[#183972]/10"
+                  />
+                </label>
+
+                <label className="block">
+                  <span className="mb-2 block text-sm font-bold text-[#183972]">
+                    Filtrar categoría
+                  </span>
+
+                  <select
+                    value={adminCategory}
+                    onChange={(event) => setAdminCategory(event.target.value)}
+                    className="w-full rounded-2xl border border-gray-300 bg-gray-50 px-4 py-3 text-sm outline-none transition focus:border-[#183972] focus:ring-4 focus:ring-[#183972]/10"
                   >
-                    <img
-                      src={eventItem.image}
-                      alt={eventItem.title}
-                      className="h-24 w-full rounded-2xl object-cover md:w-28"
-                    />
+                    <option>Todas</option>
 
-                    <div>
-                      <div className="mb-2 flex flex-wrap items-center gap-2">
-                        <span className="rounded-full bg-[#183972]/10 px-3 py-1 text-xs font-bold text-[#183972]">
-                          {eventItem.category}
-                        </span>
+                    {categories.map((category) => (
+                      <option key={category}>{category}</option>
+                    ))}
+                  </select>
+                </label>
+              </div>
 
-                        <span className="rounded-full bg-gray-100 px-3 py-1 text-xs font-semibold text-gray-600">
-                          {eventItem.modality}
-                        </span>
-                      </div>
+              <div className="border-b border-gray-100 px-5 py-3 text-sm text-gray-600">
+                Mostrando <strong>{filteredAdminEvents.length}</strong> de{" "}
+                <strong>{events.length}</strong> eventos en administración.
+              </div>
 
-                      <h4 className="text-lg font-bold text-[#183972]">
-                        {eventItem.title}
-                      </h4>
+              {filteredAdminEvents.length === 0 ? (
+                <div className="p-8 text-center">
+                  <h4 className="text-lg font-bold text-[#183972]">
+                    No hay eventos con esos filtros
+                  </h4>
 
-                      <p className="mt-1 line-clamp-2 text-sm text-gray-600">
-                        {eventItem.description}
-                      </p>
+                  <p className="mt-2 text-sm text-gray-600">
+                    Prueba con otra palabra o selecciona otra categoría.
+                  </p>
+                </div>
+              ) : (
+                <div className="divide-y divide-gray-200">
+                  {filteredAdminEvents.map((eventItem) => (
+                    <div key={eventItem.id} className="p-5">
+                      <div className="flex flex-col gap-4 xl:flex-row xl:items-center xl:justify-between">
+                        <div className="flex flex-col gap-4 sm:flex-row">
+                          <img
+                            src={eventItem.image}
+                            alt={eventItem.title}
+                            className="h-32 w-full rounded-2xl object-cover sm:h-28 sm:w-36"
+                          />
 
-                      <p className="mt-2 text-sm text-gray-700">
-                        <strong>{formatDate(eventItem.date)}</strong> ·{" "}
-                        {eventItem.location}
-                      </p>
-                    </div>
+                          <div>
+                            <div className="mb-2 flex flex-wrap gap-2">
+                              <span className="rounded-full bg-[#183972]/10 px-3 py-1 text-xs font-bold text-[#183972]">
+                                {eventItem.category}
+                              </span>
 
-                    <div className="flex gap-2 md:flex-col">
-                      <button
-                        type="button"
-                        onClick={() => handleEdit(eventItem)}
-                        className="rounded-full bg-[#f5c400] px-4 py-2 text-sm font-bold text-[#183972] transition hover:bg-yellow-300"
-                      >
-                        Modificar
-                      </button>
+                              <span className="rounded-full bg-yellow-100 px-3 py-1 text-xs font-bold text-[#183972]">
+                                {eventItem.modality}
+                              </span>
+                            </div>
 
-                      <AlertDialog>
-                        <AlertDialogTrigger asChild>
+                            <h4 className="text-lg font-extrabold text-[#183972]">
+                              {eventItem.title}
+                            </h4>
+
+                            <p className="mt-1 line-clamp-2 text-sm text-gray-600">
+                              {eventItem.description}
+                            </p>
+
+                            <div className="mt-3 grid gap-2 text-xs text-gray-600 md:grid-cols-2">
+                              <p>
+                                <strong>Inicio:</strong>{" "}
+                                {formatDate(eventItem.date)}
+                              </p>
+
+                              <p>
+                                <strong>Final:</strong>{" "}
+                                {formatDate(eventItem.endDate)}
+                              </p>
+
+                              <p>
+                                <strong>Lugar:</strong> {eventItem.location}
+                              </p>
+
+                              <p>
+                                <strong>Organizador:</strong>{" "}
+                                {eventItem.organizer}
+                              </p>
+                            </div>
+                          </div>
+                        </div>
+
+                        <div className="flex shrink-0 flex-col gap-2 sm:flex-row xl:flex-col">
                           <button
                             type="button"
-                            className="rounded-full bg-red-50 px-4 py-2 text-sm font-bold text-red-700 transition hover:bg-red-100"
+                            onClick={() => handleEdit(eventItem)}
+                            className="rounded-full bg-[#183972] px-5 py-2 text-sm font-bold text-white transition hover:bg-[#f5c400] hover:text-[#183972]"
                           >
-                            Eliminar
+                            Modificar
                           </button>
-                        </AlertDialogTrigger>
 
-                        <AlertDialogContent className="rounded-2xl">
-                          <AlertDialogHeader>
-                            <AlertDialogTitle className="text-[#183972]">
-                              ¿Eliminar este evento?
-                            </AlertDialogTitle>
+                          <AlertDialog>
+                            <AlertDialogTrigger asChild>
+                              <button
+                                type="button"
+                                className="rounded-full border border-red-500 px-5 py-2 text-sm font-bold text-red-600 transition hover:bg-red-50"
+                              >
+                                Eliminar
+                              </button>
+                            </AlertDialogTrigger>
 
-                            <AlertDialogDescription>
-                              Esta acción eliminará el evento{" "}
-                              <strong>{eventItem.title}</strong>. No podrás
-                              recuperarlo después.
-                            </AlertDialogDescription>
-                          </AlertDialogHeader>
+                            <AlertDialogContent>
+                              <AlertDialogHeader>
+                                <AlertDialogTitle>
+                                  ¿Eliminar este evento?
+                                </AlertDialogTitle>
 
-                          <AlertDialogFooter>
-                            <AlertDialogCancel>Cancelar</AlertDialogCancel>
+                                <AlertDialogDescription>
+                                  Esta acción eliminará el evento "
+                                  {eventItem.title}" de la lista. No podrás
+                                  recuperarlo después.
+                                </AlertDialogDescription>
+                              </AlertDialogHeader>
 
-                            <AlertDialogAction
-                              onClick={() => handleDelete(eventItem.id)}
-                              className="bg-red-600 text-white hover:bg-red-700"
-                            >
-                              Sí, eliminar
-                            </AlertDialogAction>
-                          </AlertDialogFooter>
-                        </AlertDialogContent>
-                      </AlertDialog>
+                              <AlertDialogFooter>
+                                <AlertDialogCancel>
+                                  Cancelar
+                                </AlertDialogCancel>
+
+                                <AlertDialogAction
+                                  onClick={() => handleDelete(eventItem.id)}
+                                  className="bg-red-600 text-white hover:bg-red-700"
+                                >
+                                  Sí, eliminar
+                                </AlertDialogAction>
+                              </AlertDialogFooter>
+                            </AlertDialogContent>
+                          </AlertDialog>
+                        </div>
+                      </div>
                     </div>
-                  </div>
-                ))}
-              </div>
+                  ))}
+                </div>
+              )}
             </div>
           </div>
         </div>
@@ -701,6 +822,7 @@ export default function EventManager() {
               <div className="mt-6 grid gap-4 md:grid-cols-2">
                 <div className="rounded-2xl bg-gray-50 p-4">
                   <p className="text-sm font-bold text-[#183972]">Inicio</p>
+
                   <p className="mt-1 text-sm text-gray-700">
                     {formatDate(selectedEvent.date)}
                   </p>
@@ -710,6 +832,7 @@ export default function EventManager() {
                   <p className="text-sm font-bold text-[#183972]">
                     Finalización
                   </p>
+
                   <p className="mt-1 text-sm text-gray-700">
                     {formatDate(selectedEvent.endDate)}
                   </p>
@@ -717,6 +840,7 @@ export default function EventManager() {
 
                 <div className="rounded-2xl bg-gray-50 p-4">
                   <p className="text-sm font-bold text-[#183972]">Lugar</p>
+
                   <p className="mt-1 text-sm text-gray-700">
                     {selectedEvent.location}
                   </p>
@@ -726,6 +850,7 @@ export default function EventManager() {
                   <p className="text-sm font-bold text-[#183972]">
                     Organizador
                   </p>
+
                   <p className="mt-1 text-sm text-gray-700">
                     {selectedEvent.organizer}
                   </p>
@@ -733,6 +858,7 @@ export default function EventManager() {
 
                 <div className="rounded-2xl bg-gray-50 p-4">
                   <p className="text-sm font-bold text-[#183972]">Categoría</p>
+
                   <p className="mt-1 text-sm text-gray-700">
                     {selectedEvent.category}
                   </p>
