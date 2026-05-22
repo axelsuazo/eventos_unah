@@ -17,13 +17,9 @@
     "isolatedModules": true,
     "jsx": "react-jsx",
     "incremental": true,
-    "baseUrl": ".",
     "paths": {
       "@/*": [
         "./*"
-      ],
-      "@payload-config": [
-        "./payload.config.ts"
       ]
     },
     "plugins": [
@@ -41,7 +37,6 @@
     "**/*.mts"
   ],
   "exclude": [
-    "node_modules",
-    "frontend"
+    "node_modules"
   ]
 }
