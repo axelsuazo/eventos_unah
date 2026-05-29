@@ -1,30 +1,24 @@
-# Sistema de Gestión de Eventos UNAH
+# Eventos UNAH
 
-Este proyecto es un sistema web para la gestión y visualización de eventos de la Universidad Nacional Autónoma de Honduras. El sistema permite que los administradores gestionen eventos desde Payload CMS y que los usuarios públicos puedan visualizar los eventos disponibles desde el frontend.
+Sistema web para la gestión y visualización de eventos de la Universidad Nacional Autónoma de Honduras.
 
-El proyecto utiliza **Next.js**, **Tailwind CSS**, **Payload CMS** y **MongoDB Atlas**.
+El proyecto está separado en dos partes:
 
----
+1. **CMS / Backend con Payload CMS**: permite administrar eventos, usuarios, roles e imágenes.
+2. **Frontend público con Next.js**: permite mostrar, buscar y filtrar eventos publicados.
 
-## Descripción del proyecto
-
-El objetivo principal del sistema es mostrar eventos universitarios de forma pública, ordenada y atractiva, mientras que la administración de los eventos se realiza únicamente desde el panel administrativo de Payload CMS.
-
-El frontend funciona como sitio público para los visitantes. Desde ahí se pueden consultar los eventos publicados, buscar eventos, aplicar filtros y abrir una tarjeta para ver la información completa del evento.
-
-El backend está manejado con Payload CMS, donde el administrador puede crear, editar y eliminar eventos mediante un panel privado.
 
 ---
 
-## Tecnologías utilizadas
+## Stack utilizado
 
 - Next.js
 - React
 - TypeScript
 - Tailwind CSS
-- Payload CMS
-- MongoDB Atlas
 - shadcn/ui
+- Payload CMS
+- MongoDB
 - Node.js
 - npm
 
@@ -38,26 +32,12 @@ El frontend permite:
 
 - Mostrar eventos publicados desde Payload CMS.
 - Ver eventos en tarjetas.
-- Abrir una tarjeta para ver la información completa.
-- Mostrar imagen del evento en la tarjeta y en el detalle.
-- Usar carrusel de eventos.
-- Buscar eventos por texto.
-- Filtrar eventos por:
-  - Año
-  - Mes
-  - Semana
-  - Día
-  - Hora
-  - Categoría
-- Mostrar solo 6 tarjetas por página.
-- Usar paginación para ver más eventos.
-- Mostrar estados claros:
-  - Cargando
-  - Error
-  - Sin eventos
-  - Sin resultados por filtros
-
----
+- Abrir el detalle de cada evento.
+- Mostrar imágenes de eventos.
+- Buscar eventos por texto con un buscador simplificado.
+- Mostrar el carrusel con descripción truncada y contador de caracteres.
+- Mostrar paginación.
+- Manejar estados de carga, error, vacío y sin resultados.
 
 ### Payload CMS
 
@@ -67,70 +47,94 @@ Desde Payload CMS se puede:
 - Crear eventos.
 - Editar eventos.
 - Eliminar eventos.
-- Subir imágenes para los eventos.
-- Gestionar usuarios según su rol.
+- Subir imágenes.
+- Gestionar usuarios según rol.
+- Consultar eventos públicos mediante endpoint protegido con JWT.
+- Gestionar categorías dinámicas desde el CMS.
 
 ---
 
 ## Roles del sistema
 
-El sistema maneja los siguientes roles:
-
 ### Admin
 
-El usuario con rol `admin` puede:
-
-- Crear eventos.
-- Editar eventos.
-- Eliminar eventos.
-- Subir imágenes.
-- Crear nuevos administradores.
-- Crear co-administradores.
-- Gestionar usuarios.
+Tiene CRUD completo sobre eventos, medios y usuarios.
 
 ### Co-admin
 
-El usuario con rol `co-admin` puede:
+Puede crear, editar y eliminar eventos y medios, pero no administra usuarios.
 
-- Crear eventos.
-- Editar eventos.
-- Eliminar eventos.
-- Subir imágenes.
+### Viewer / Público solo lectura
 
-## Estructura del proyecto
+No administra el CMS. La lectura pública de eventos queda limitada a eventos publicados.
+
+---
+
+## Seguridad de lectura pública
+
+La colección `events` ya no expone todos los registros al público.
+
+La API pública solo devuelve eventos con:
 
 ```txt
-proyecto/
-├── app/
-│   ├── (frontend)/
-│   │   ├── page.tsx
-│   │   └── layout.tsx
-│   ├── (payload)/
-│   │   ├── admin/
-│   │   └── api/
-│   ├── Components/
-│   │   ├── Navbar.tsx
-│   │   ├── Hero.tsx
-│   │   ├── EventManager.tsx
-│   │   ├── EventCard.tsx
-│   │   ├── EventCarousel.tsx
-│   │   └── Footer.tsx
-│   └── globals.css
-│
-├── collections/
-│   ├── Events.ts
-│   ├── Users.ts
-│   └── Media.ts
-│
-├── features/
-│   └── events/
-│       ├── api.ts
-│       ├── date.ts
-│       └── types.ts
-│
-├── public/
-├── payload.config.ts
-├── next.config.ts
-├── package.json
-├── .env.example
-└── README.md
+published = true
+```
+
+Los roles `admin` y `co-admin` sí pueden ver todos los eventos desde el CMS.
+
+---
+
+## Endpoints administrativos agregados
+
+### Métricas básicas
+
+```txt
+GET /api/dashboard-metrics
+```
+
+Devuelve:
+
+- total de eventos
+- eventos publicados
+- eventos no publicados
+- eventos próximos
+- eventos pasados
+- eventos por categoría
+- próximos 5 eventos
+
+Requiere usuario autenticado con rol `admin` o `co-admin`.
+
+### Alertas
+
+```txt
+GET /api/alerts
+```
+
+Devuelve alertas sobre:
+
+- eventos próximos en los siguientes 7 días
+- eventos publicados sin imagen
+- eventos guardados como no publicados
+
+Requiere usuario autenticado con rol `admin` o `co-admin`.
+
+---
+
+## Configuración del CMS
+
+Crear un archivo `.env.local` en la raíz del proyecto usando como base `.env.example`:
+
+
+
+Instalar dependencias y ejecutar el CMS:
+
+```bash
+npm install
+npm run dev
+```
+
+El CMS corre en:
+
+```txt
+http://localhost:3001/admin
+```

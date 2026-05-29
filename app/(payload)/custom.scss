@@ -1,1 +1,208 @@
-/* Estilos personalizados para el panel de Payload. */
+/* Estilos seguros para Payload CMS Admin */
+/* No usar @import de @payloadcms/ui/scss porque rompe con Next/Turbopack */
+
+/* Colores institucionales */
+:root {
+  --unah-blue: #183972;
+  --unah-red: #8c0327;
+  --unah-yellow: #f5c400;
+  --unah-bg: #f8fafc;
+}
+
+/* ========================= */
+/* Variables visuales Payload */
+/* ========================= */
+
+html[data-theme="light"] {
+  --theme-bg: #f8fafc;
+  --theme-text: #111827;
+
+  --theme-elevation-0: #ffffff;
+  --theme-elevation-50: #f9fafb;
+  --theme-elevation-100: #f3f4f6;
+  --theme-elevation-150: #e5e7eb;
+  --theme-elevation-200: #d1d5db;
+
+  --theme-success-500: #16a34a;
+  --theme-error-500: #dc2626;
+  --theme-warning-500: #f59e0b;
+}
+
+html[data-theme="dark"] {
+  --theme-bg: #1F3A69;
+  --theme-text: #f8fafc;
+
+  --theme-elevation-0: #0f172a;
+  --theme-elevation-50: #111827;
+  --theme-elevation-100: #0062ff;
+  --theme-elevation-150: #334155;
+  --theme-elevation-200: #475569;
+
+  --theme-success-500: #22c55e;
+  --theme-error-500: #ef4444;
+  --theme-warning-500: #facc15;
+}
+
+/* ========================= */
+/* Sidebar / navegación      */
+/* ========================= */
+
+.nav {
+  background-color: var(--unah-blue);
+}
+
+html[data-theme="dark"] .nav {
+  background-color: #13689E;
+}
+
+.nav a,
+.nav button {
+  transition:
+    color 0.2s ease,
+    background-color 0.2s ease;
+}
+
+.nav a:hover,
+.nav button:hover {
+  color: var(--unah-yellow);
+}
+
+/* ========================= */
+/* Botones                   */
+/* ========================= */
+
+.btn--style-primary {
+  background-color: var(--unah-blue);
+  border-color: var(--unah-blue);
+  color: #ffffff;
+  border-radius: 999px;
+  font-weight: 700;
+}
+
+.btn--style-primary:hover {
+  background-color: var(--unah-yellow);
+  border-color: var(--unah-yellow);
+  color: var(--unah-blue);
+}
+
+html[data-theme="dark"] .btn--style-primary {
+  background-color: var(--unah-yellow);
+  border-color: var(--unah-yellow);
+  color: var(--unah-blue);
+}
+
+html[data-theme="dark"] .btn--style-primary:hover {
+  background-color: #ffe066;
+  border-color: #ffe066;
+  color: var(--unah-blue);
+}
+
+/* Botones secundarios sin alterar tamaño */
+.btn--style-secondary {
+  border-radius: 999px;
+  font-weight: 700;
+}
+
+/* ========================= */
+/* Enlaces                   */
+/* ========================= */
+
+a {
+  transition: color 0.2s ease;
+}
+
+a:hover {
+  color: var(--unah-red);
+}
+
+html[data-theme="dark"] a:hover {
+  color: var(--unah-yellow);
+}
+
+/* ========================= */
+/* Dashboard                 */
+/* ========================= */
+
+.dashboard {
+  background:
+    radial-gradient(circle at top left, rgba(255, 255, 255, 0.14), transparent 32%),
+    var(--theme-bg);
+}
+
+.dashboard__label,
+.dashboard__card-label {
+  color: var(--unah-blue);
+}
+
+html[data-theme="dark"] .dashboard__label,
+html[data-theme="dark"] .dashboard__card-label {
+  color: var(--unah-yellow);
+}
+
+/* ========================= */
+/* Badges / estados          */
+/* ========================= */
+
+.pill {
+  border-radius: 999px;
+}
+
+/* ========================= */
+/* Tablas / listas           */
+/* ========================= */
+
+.collection-list {
+  border-radius: 16px;
+  overflow: hidden;
+}
+
+.table {
+  border-radius: 16px;
+  overflow: hidden;
+}
+
+/* ========================= */
+/* Evitar cambios agresivos  */
+/* ========================= */
+
+/*
+No tocar:
+- input
+- textarea
+- select
+- body
+- *
+- h1, h2, h3 globales
+- .field-type
+- .render-fields
+- .card
+
+Payload ya maneja esos tamaños internamente.
+*/
+/* ========================= */
+/* Color visual de Payload   */
+/* ========================= */
+
+.payload-logo,
+.template-default .nav__brand,
+.template-default .nav__brand a,
+.template-default .nav__brand svg,
+.template-default .nav__brand path {
+  color: var(--unah-yellow);
+  fill: var(--unah-yellow);
+}
+
+html[data-theme="light"] .payload-logo,
+html[data-theme="light"] .template-default .nav__brand,
+html[data-theme="light"] .template-default .nav__brand a,
+html[data-theme="light"] .template-default .nav__brand svg,
+html[data-theme="light"] .template-default .nav__brand path {
+  color: var(--unah-blue);
+  fill: var(--unah-blue);
+}
+
+.doc-header,
+.collection-list__header,
+.list-header {
+  border-top: 4px solid var(--unah-yellow);
+}

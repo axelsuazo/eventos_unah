@@ -1,123 +1,168 @@
-import type { Access, CollectionConfig } from "payload";
-import { isAdmin, isAdminOrCoAdmin } from "./access";
+import type {
+  Access,
+  CollectionConfig,
+  FieldAccess,
+  PayloadRequest,
+} from 'payload'
 
-type UserRole = "admin" | "co-admin" | "viewer";
+type UserRole = 'admin' | 'co-admin' | 'viewer'
 
-type UserWithRole = {
-  id?: string | number;
-  role?: UserRole;
-};
+type AuthUser =
+  | {
+      id?: string | number
+      role?: UserRole
+    }
+  | null
+  | undefined
 
-function getRole(user: unknown): UserRole | undefined {
-  return (user as UserWithRole | undefined)?.role;
+const getUserRole = (req: PayloadRequest): UserRole | undefined => {
+  const user = req.user as AuthUser
+
+  return user?.role
 }
 
-const canUseAdminPanel: Access = ({ req: { user } }) => {
-  const role = getRole(user);
-  return role === "admin" || role === "co-admin";
-};
+const isAdminUser = ({ req }: { req: PayloadRequest }): boolean => {
+  return getUserRole(req) === 'admin'
+}
 
-const canReadUsers: Access = ({ req: { user } }) => {
-  if (!user) return false;
+const isAdminOrCoAdminUser = ({
+  req,
+}: {
+  req: PayloadRequest
+}): boolean => {
+  const role = getUserRole(req)
 
-  if (getRole(user) === "admin") return true;
+  return role === 'admin' || role === 'co-admin'
+}
 
-  return {
-    id: {
-      equals: user.id,
-    },
-  };
-};
+/**
+ * IMPORTANTE:
+ * access.admin NO debe usar el tipo Access.
+ * Debe devolver solamente true o false.
+ */
+const canUseAdminPanel = ({ req }: { req: PayloadRequest }): boolean => {
+  return isAdminOrCoAdminUser({ req })
+}
+
+/**
+ * Access de colección.
+ * Aquí sí se puede usar el tipo Access.
+ */
+const canReadUsers: Access = ({ req }) => {
+  // Los administradores pueden ver a todos
+  if (isAdminUser({ req })) return true
+
+  // Los usuarios autenticados pueden ver su propio perfil (necesario para /api/users/me)
+  if (req.user) {
+    return {
+      id: {
+        equals: req.user.id,
+      },
+    }
+  }
+
+  return false
+}
 
 const canCreateUsers: Access = async ({ req }) => {
-  if (getRole(req.user) === "admin") return true;
+  const totalUsers = await req.payload.count({
+    collection: 'users',
+  })
 
-  const existingUsers = await req.payload.find({
-    collection: "users",
-    depth: 0,
-    limit: 1,
-    overrideAccess: true,
-  });
+  if (totalUsers.totalDocs === 0) {
+    return true
+  }
 
-  return existingUsers.totalDocs === 0;
-};
+  return isAdminUser({ req })
+}
+
+const canUpdateUsers: Access = ({ req }) => {
+  return isAdminUser({ req })
+}
+
+const canDeleteUsers: Access = ({ req }) => {
+  return isAdminUser({ req })
+}
+
+
+const canReadRoleField: FieldAccess = ({ req }) => {
+  return isAdminUser({ req })
+}
+
+const canUpdateRoleField: FieldAccess = ({ req }) => {
+  return isAdminUser({ req })
+}
 
 export const Users: CollectionConfig = {
-  slug: "users",
+  slug: 'users',
+
   auth: true,
 
-  labels: {
-    singular: "Usuario",
-    plural: "Usuarios",
-  },
-
   admin: {
-    useAsTitle: "email",
-    defaultColumns: ["email", "name", "role"],
+    useAsTitle: 'email',
+    defaultColumns: ['email', 'role', 'createdAt'],
   },
 
   access: {
     admin: canUseAdminPanel,
     read: canReadUsers,
     create: canCreateUsers,
-    update: isAdmin,
-    delete: isAdmin,
+    update: canUpdateUsers,
+    delete: canDeleteUsers,
   },
 
   hooks: {
     beforeChange: [
       async ({ data, operation, req }) => {
-        if (operation !== "create") return data;
+        if (operation === 'create') {
+          const totalUsers = await req.payload.count({
+            collection: 'users',
+          })
 
-        const existingUsers = await req.payload.find({
-          collection: "users",
-          depth: 0,
-          limit: 1,
-          overrideAccess: true,
-        });
+          if (totalUsers.totalDocs === 0) {
+            return {
+              ...data,
+              role: 'admin',
+            }
+          }
 
-        const requesterIsAdmin = getRole(req.user) === "admin";
-
-        if (existingUsers.totalDocs === 0) {
           return {
             ...data,
-            role: "admin",
-          };
+            role: data?.role || 'viewer',
+          }
         }
 
-        return {
-          ...data,
-          role: requesterIsAdmin ? data.role || "co-admin" : "viewer",
-        };
+        return data
       },
     ],
   },
 
   fields: [
     {
-      name: "name",
-      label: "Nombre",
-      type: "text",
-    },
-    {
-      name: "role",
-      label: "Rol",
-      type: "select",
+      name: 'role',
+      type: 'select',
       required: true,
-      defaultValue: "viewer",
-      options: [
-        { label: "Administrador", value: "admin" },
-        { label: "Co-administrador", value: "co-admin" },
-        { label: "Visualizador", value: "viewer" },
-      ],
+      defaultValue: 'viewer',
+      saveToJWT: true,
       access: {
-        create: isAdmin,
-        update: isAdmin,
+        read: canReadRoleField,
+        create: canUpdateRoleField,
+        update: canUpdateRoleField,
       },
-      admin: {
-        description:
-          "Admin puede gestionar usuarios. Co-admin puede gestionar eventos y medios, pero no usuarios.",
-      },
+      options: [
+        {
+          label: 'Admin',
+          value: 'admin',
+        },
+        {
+          label: 'Co-admin',
+          value: 'co-admin',
+        },
+        {
+          label: 'Viewer',
+          value: 'viewer',
+        },
+      ],
     },
   ],
-};
+}

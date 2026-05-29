@@ -52,6 +52,8 @@ export type EventsLoadResult = {
   error: string | null;
 };
 
+const fallbackEventImage = "/eventos/placeholder-evento.svg";
+
 function getCmsPublicUrl() {
   const rawUrl =
     process.env.NEXT_PUBLIC_CMS_URL ||
@@ -74,8 +76,16 @@ function withCmsUrl(path: string) {
   return `${cmsUrl}${normalizedPath}`;
 }
 
+function normalizeModality(value: string) {
+  return value
+    .normalize("NFD")
+    .replace(/[\u0300-\u036f]/g, "")
+    .toLowerCase()
+    .trim();
+}
+
 export function getImageUrl(image: EventImage) {
-  if (!image) return "/UNAH-escudo.png";
+  if (!image) return withCmsUrl(fallbackEventImage);
 
   if (typeof image === "string") {
     if (image.startsWith("http://") || image.startsWith("https://")) return image;
@@ -91,7 +101,30 @@ export function getImageUrl(image: EventImage) {
     return withCmsUrl(`/api/media/file/${image.filename}`);
   }
 
-  return "/UNAH-escudo.png";
+  return withCmsUrl(fallbackEventImage);
+}
+
+export function getModalityLabel(modality: string) {
+  const normalized = normalizeModality(modality);
+
+  if (normalized === "virtual") return "Virtual";
+  if (normalized === "hibrido") return "Híbrido";
+
+  return "Presencial";
+}
+
+export function getModalityBadgeClass(modality: string) {
+  const normalized = normalizeModality(modality);
+
+  if (normalized === "virtual") {
+    return "bg-sky-100 text-sky-800 ring-sky-200 dark:bg-sky-400/15 dark:text-sky-100 dark:ring-sky-300/30";
+  }
+
+  if (normalized === "hibrido") {
+    return "bg-violet-100 text-violet-800 ring-violet-200 dark:bg-violet-400/15 dark:text-violet-100 dark:ring-violet-300/30";
+  }
+
+  return "bg-emerald-100 text-emerald-800 ring-emerald-200 dark:bg-emerald-400/15 dark:text-emerald-100 dark:ring-emerald-300/30";
 }
 
 export function normalizeEvent(event: Partial<EventItem>): EventItem {
@@ -107,7 +140,7 @@ export function normalizeEvent(event: Partial<EventItem>): EventItem {
     endDate: event.endDate || "",
     location: event.location || "UNAH",
     organizer: event.organizer || "UNAH",
-    modality: event.modality || "Presencial",
+    modality: event.modality || "presencial",
     published: event.published ?? true,
     image: event.image || null,
   };

@@ -31,8 +31,8 @@ export default function ThemeSwitch() {
       onClick={toggleTheme}
       aria-label="Cambiar tema"
       className={`relative flex h-8 w-16 items-center rounded-full p-1 transition-all duration-300 ${isDark
-          ? " bg-[#00076e]"
-          : " bg-[#ffcc00]"
+          ? " bg-[#05487f]"
+          : " bg-[#FDC300]"
         }`}
     >
       <span

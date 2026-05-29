@@ -17,12 +17,8 @@ export default function Navbar() {
         <a href="#inicio" className="flex items-center gap-3">
           <img src="/UNAH-escudo.png" alt="UNAH Logo" className="h-12 w-auto" />
           <div className="leading-tight">
-            <h1 className="text-lg font-black text-[#183972] dark:text-slate-100">
-              Eventos UNAH
-            </h1>
-            <p className="text-xs font-semibold text-gray-500 dark:text-slate-400">
-              Comunidad universitaria
-            </p>
+           
+          
           </div>
         </a>
 

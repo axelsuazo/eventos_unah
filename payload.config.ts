@@ -1,76 +1,73 @@
-import path from "path";
-import { fileURLToPath } from "url";
-import { buildConfig } from "payload";
-import { mongooseAdapter } from "@payloadcms/db-mongodb";
-import { lexicalEditor } from "@payloadcms/richtext-lexical";
-import sharp from "sharp";
+import { mongooseAdapter } from '@payloadcms/db-mongodb'
+import { vercelBlobStorage } from '@payloadcms/storage-vercel-blob'
+import { lexicalEditor } from '@payloadcms/richtext-lexical'
+import path from 'path'
+import { buildConfig } from 'payload'
+import sharp from 'sharp'
+import { fileURLToPath } from 'url'
 
-import { Users } from "./collections/Users";
-import { Media } from "./collections/Media";
-import { Events } from "./collections/Events";
+import { Categories } from './collections/Categories'
+import { Events } from './collections/Events'
+import { Media } from './collections/Media'
+import { Users } from './collections/Users'
 
-const filename = fileURLToPath(import.meta.url);
-const dirname = path.dirname(filename);
+const filename = fileURLToPath(import.meta.url)
+const dirname = path.dirname(filename)
 
-const payloadSecret =
-  process.env.PAYLOAD_SECRET || "eventos-unah-dev-secret-cambiar-en-produccion";
+const databaseUrl = process.env.DATABASE_URL
+const payloadSecret = process.env.PAYLOAD_SECRET
 
-const databaseUrl = process.env.DATABASE_URL;
 if (!databaseUrl) {
-  throw new Error("DATABASE_URL no está definida. Revisa el archivo .env.local del CMS.");
+  throw new Error(
+    'DATABASE_URL no está definida. Revisa el archivo .env.local del CMS.',
+  )
 }
 
-const serverURL = process.env.NEXT_PUBLIC_SERVER_URL || "http://localhost:3001";
-const frontendURL = process.env.FRONTEND_URL || "http://localhost:3000";
+if (!payloadSecret) {
+  throw new Error(
+    'PAYLOAD_SECRET no está definido. Revisa el archivo .env.local del CMS.',
+  )
+}
+
+const serverURL = process.env.NEXT_PUBLIC_SERVER_URL || 'http://localhost:3001'
+const frontendURL = process.env.FRONTEND_URL || 'http://localhost:3000'
 
 export default buildConfig({
-  serverURL,
-  cors: [serverURL, frontendURL],
-  csrf: [serverURL, frontendURL],
-
-  routes: {
-    admin: "/admin",
-    api: "/api",
-    graphQL: "/api/graphql",
-    graphQLPlayground: "/api/graphql-playground",
-  },
-
   admin: {
     user: Users.slug,
     importMap: {
       baseDir: path.resolve(dirname),
-      importMapFile: path.resolve(
-        dirname,
-        "app",
-        "(payload)",
-        "admin",
-        "importMap.js"
-      ),
-    },
-    meta: {
-      titleSuffix: " - Eventos UNAH CMS",
-      icons: [
-        {
-          rel: "icon",
-          url: "/UNAH-escudo.png",
-        },
-      ],
     },
   },
 
-  collections: [Users, Media, Events],
+  collections: [Users, Media, Categories, Events],
+
+  cors: [serverURL, frontendURL],
+  csrf: [serverURL, frontendURL],
 
   editor: lexicalEditor(),
 
   secret: payloadSecret,
 
   typescript: {
-    outputFile: path.resolve(dirname, "payload-types.ts"),
+    outputFile: path.resolve(dirname, 'payload-types.ts'),
   },
 
   db: mongooseAdapter({
     url: databaseUrl,
   }),
 
+  plugins: [
+    vercelBlobStorage({
+      enabled: Boolean(process.env.BLOB_READ_WRITE_TOKEN),
+      collections: {
+        media: {
+          prefix: 'eventos-unah',
+        },
+      },
+      token: process.env.BLOB_READ_WRITE_TOKEN,
+    }),
+  ],
+
   sharp,
-});
+})

@@ -1,35 +1,46 @@
-import type { CollectionConfig } from "payload";
-import { isAdminOrCoAdmin } from "./access";
+import type { CollectionConfig } from 'payload'
+import { isAdminOrCoAdmin } from './access'
+
+const publicRead = () => true
 
 export const Media: CollectionConfig = {
-  slug: "media",
+  slug: 'media',
 
-  labels: {
-    singular: "Medio",
-    plural: "Medios",
-  },
-
-  upload: {
-    mimeTypes: ["image/*"],
+  admin: {
+    useAsTitle: 'filename',
+    defaultColumns: ['filename', 'mimeType', 'filesize', 'createdAt'],
   },
 
   access: {
-    read: () => true,
+    read: publicRead,
     create: isAdminOrCoAdmin,
     update: isAdminOrCoAdmin,
     delete: isAdminOrCoAdmin,
   },
 
-  admin: {
-    useAsTitle: "alt",
+  upload: {
+    mimeTypes: ['image/*'],
+    imageSizes: [
+      {
+        name: 'card',
+        width: 600,
+        height: 400,
+        position: 'centre',
+      },
+      {
+        name: 'hero',
+        width: 1200,
+        height: 700,
+        position: 'centre',
+      },
+    ],
   },
 
   fields: [
     {
-      name: "alt",
-      label: "Texto alternativo",
-      type: "text",
-      required: true,
+      name: 'alt',
+      type: 'text',
+      label: 'Texto alternativo',
     },
   ],
-};
+}

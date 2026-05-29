@@ -6,13 +6,6 @@ import {
   normalizeEvent,
 } from "@/features/events/types";
 
-type PayloadMedia = {
-  id?: string | number;
-  url?: string;
-  alt?: string;
-  filename?: string;
-};
-
 type PayloadEvent = {
   id?: string | number;
   _id?: string | number;
@@ -25,7 +18,13 @@ type PayloadEvent = {
   organizer?: string;
   modality?: string;
   published?: boolean;
-  image?: EventImage | PayloadMedia;
+  image?: EventImage;
+};
+
+type LoginResponse = {
+  token?: string;
+  tokenType?: string;
+  expiresIn?: string;
 };
 
 function getCmsUrl() {
@@ -35,6 +34,19 @@ function getCmsUrl() {
     "http://localhost:3001";
 
   return rawUrl.replace(/\/$/, "");
+}
+
+function getApiCredentials() {
+  const email = process.env.CMS_API_EMAIL;
+  const password = process.env.CMS_API_PASSWORD;
+
+  if (!email || !password) {
+    throw new Error(
+      "Faltan CMS_API_EMAIL y CMS_API_PASSWORD en el entorno del frontend.",
+    );
+  }
+
+  return { email, password };
 }
 
 function getErrorMessage(error: unknown) {
@@ -59,18 +71,50 @@ function mapPayloadEvent(event: PayloadEvent): EventItem {
   });
 }
 
+async function getApiAccessToken(cmsUrl: string) {
+  const credentials = getApiCredentials();
+  // Usar el endpoint personalizado que genera el token compatible con la protección JWT
+  const response = await fetch(`${cmsUrl}/api/auth/login`, {
+    method: "POST",
+    headers: {
+      "Content-Type": "application/json",
+    },
+    body: JSON.stringify(credentials),
+    cache: "no-store",
+  });
+
+  if (response.status === 401) {
+    throw new Error(
+      `Error de autenticación (401). Verifique que CMS_API_EMAIL (${credentials.email}) y la contraseña en su .env.local sean correctos y que el usuario exista en el CMS.`
+    );
+  }
+
+  if (!response.ok) {
+    throw new Error(
+      `No se pudo iniciar sesión en la API protegida (${response.status}).`,
+    );
+  }
+
+  const data = (await response.json()) as LoginResponse;
+
+  if (!data.token) {
+    throw new Error("La API no devolvió un token JWT.");
+  }
+
+  return data.token;
+}
+
 export async function getEventsResult(): Promise<EventsLoadResult> {
   const cmsUrl = getCmsUrl();
 
   try {
-    const url = new URL("/api/events", cmsUrl);
-
-    url.searchParams.set("where[published][equals]", "true");
-    url.searchParams.set("sort", "date");
-    url.searchParams.set("limit", "100");
-    url.searchParams.set("depth", "1");
+    const token = await getApiAccessToken(cmsUrl);
+    const url = new URL("/api/public/events", cmsUrl);
 
     const response = await fetch(url.toString(), {
+      headers: {
+        Authorization: `Bearer ${token}`,
+      },
       cache: "no-store",
     });
 
