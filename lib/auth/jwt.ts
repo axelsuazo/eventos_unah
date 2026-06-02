@@ -69,13 +69,13 @@ function getBearerToken(request: Request) {
     return null
   }
 
-  const [scheme, token] = authorization.split(' ')
+  const parts = authorization.split(' ')
 
-  if (scheme !== 'Bearer' || !token) {
+  if (parts.length !== 2 || parts[0] !== 'Bearer') {
     return null
   }
 
-  return token.trim()
+  return parts[1].trim()
 }
 
 export async function signApiToken(payload: ApiTokenPayload) {
@@ -96,6 +96,19 @@ export async function verifyJwtRequest(
     return {
       ok: false,
       response: jwtErrorResponses.missing(),
+    }
+  }
+
+  // 1. Verificar si el token es el API_KEY estático (Shared Secret)
+  const staticKey = process.env.CMS_STATIC_API_TOKEN
+  if (staticKey && token === staticKey) {
+    return {
+      ok: true,
+      payload: {
+        sub: 'static-api-client',
+        email: 'api-frontend@unah.edu.hn',
+        role: 'admin', // El frontend actuará con permisos de admin para ver eventos publicados
+      },
     }
   }
 

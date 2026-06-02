@@ -21,11 +21,11 @@ const getUserRole = (req: PayloadRequest): UserRole | undefined => {
   return user?.role
 }
 
-const isAdminUser = ({ req }: { req: PayloadRequest }): boolean => {
+export const isAdminUser = ({ req }: { req: PayloadRequest }): boolean => {
   return getUserRole(req) === 'admin'
 }
 
-const isAdminOrCoAdminUser = ({
+export const isAdminOrCoAdminUser = ({
   req,
 }: {
   req: PayloadRequest
@@ -86,7 +86,11 @@ const canDeleteUsers: Access = ({ req }) => {
 
 
 const canReadRoleField: FieldAccess = ({ req }) => {
-  return isAdminUser({ req })
+  // Los administradores pueden ver los roles de todos
+  if (isAdminUser({ req })) return true
+
+  // Los usuarios deben poder ver su propio rol para que el sistema lo reconozca
+  return !!req.user
 }
 
 const canUpdateRoleField: FieldAccess = ({ req }) => {

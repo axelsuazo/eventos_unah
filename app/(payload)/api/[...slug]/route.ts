@@ -38,10 +38,20 @@ function withApiProtection<Context = unknown>(
   handler: (request: Request, context: Context) => Response | Promise<Response>,
 ) {
   return async (request: Request, context: Context) => {
+    const path = getApiPath(request)
+
+    // 1. Excepciones públicas (Login, archivos de media, etc.)
     if (isPublicApiException(request)) {
       return handler(request, context)
     }
 
+    // 2. Solo aplicamos la protección estricta de JWT a rutas que empiecen con 'public/'
+    // El resto (categories, users, events) usarán la sesión de Payload (Cookies)
+    if (!path.startsWith('public/')) {
+      return handler(request, context)
+    }
+
+    // 3. Verificación de JWT para la API pública
     const verification = await verifyJwtRequest(request)
 
     if (!verification.ok) {

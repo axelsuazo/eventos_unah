@@ -1,24 +1,5 @@
 import type { Access, CollectionConfig } from 'payload'
-
-const isAdminOrCoAdmin: Access = ({ req }) => {
-  const user = req.user as { role?: string } | null | undefined
-
-  return user?.role === 'admin' || user?.role === 'co-admin'
-}
-
-const readPublishedOrAdmin: Access = ({ req }) => {
-  const user = req.user as { role?: string } | null | undefined
-
-  if (user?.role === 'admin' || user?.role === 'co-admin') {
-    return true
-  }
-
-  return {
-    published: {
-      equals: true,
-    },
-  }
-}
+import { isAdminOrCoAdmin, canReadPublishedEvents } from './access'
 
 type EventSiblingData = {
   date?: string | Date | null
@@ -33,7 +14,7 @@ export const Events: CollectionConfig = {
   },
 
   access: {
-    read: readPublishedOrAdmin,
+    read: canReadPublishedEvents,
     create: isAdminOrCoAdmin,
     update: isAdminOrCoAdmin,
     delete: isAdminOrCoAdmin,

@@ -1,0 +1,24 @@
+/* Colores institucionales UNAH para el Admin UI */
+:root {
+  /* Azul UNAH como color primario */
+  --theme-primary-50: #f0f4f9;
+  --theme-primary-100: #dce7f1;
+  --theme-primary-200: #bdcfe5;
+  --theme-primary-300: #8fabd1;
+  --theme-primary-400: #5b80b7;
+  --theme-primary-500: #183972; /* Color principal */
+  --theme-primary-600: #142d5b;
+  --theme-primary-700: #112348;
+  --theme-primary-800: #0e1b38;
+  --theme-primary-900: #0c152d;
+  --theme-primary-950: #070d1d;
+
+  /* Amarillo UNAH para estados de éxito o advertencias */
+  --theme-success-500: #f5c400;
+  --theme-warning-500: #f5c400;
+}
+
+/* Ajuste opcional: que los botones de 'Publicar' o 'Guardar' resalten más */
+.btn--style-primary {
+  font-weight: 800 !important;
+}

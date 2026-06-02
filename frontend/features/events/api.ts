@@ -21,12 +21,6 @@ type PayloadEvent = {
   image?: EventImage;
 };
 
-type LoginResponse = {
-  token?: string;
-  tokenType?: string;
-  expiresIn?: string;
-};
-
 function getCmsUrl() {
   const rawUrl =
     process.env.CMS_URL ||
@@ -36,17 +30,12 @@ function getCmsUrl() {
   return rawUrl.replace(/\/$/, "");
 }
 
-function getApiCredentials() {
-  const email = process.env.CMS_API_EMAIL;
-  const password = process.env.CMS_API_PASSWORD;
-
-  if (!email || !password) {
-    throw new Error(
-      "Faltan CMS_API_EMAIL y CMS_API_PASSWORD en el entorno del frontend.",
-    );
+function getApiToken() {
+  const token = process.env.CMS_API_TOKEN;
+  if (!token) {
+    throw new Error("Falta la variable CMS_API_TOKEN en el frontend.");
   }
-
-  return { email, password };
+  return token;
 }
 
 function getErrorMessage(error: unknown) {
@@ -71,44 +60,11 @@ function mapPayloadEvent(event: PayloadEvent): EventItem {
   });
 }
 
-async function getApiAccessToken(cmsUrl: string) {
-  const credentials = getApiCredentials();
-  // Usar el endpoint personalizado que genera el token compatible con la protección JWT
-  const response = await fetch(`${cmsUrl}/api/auth/login`, {
-    method: "POST",
-    headers: {
-      "Content-Type": "application/json",
-    },
-    body: JSON.stringify(credentials),
-    cache: "no-store",
-  });
-
-  if (response.status === 401) {
-    throw new Error(
-      `Error de autenticación (401). Verifique que CMS_API_EMAIL (${credentials.email}) y la contraseña en su .env.local sean correctos y que el usuario exista en el CMS.`
-    );
-  }
-
-  if (!response.ok) {
-    throw new Error(
-      `No se pudo iniciar sesión en la API protegida (${response.status}).`,
-    );
-  }
-
-  const data = (await response.json()) as LoginResponse;
-
-  if (!data.token) {
-    throw new Error("La API no devolvió un token JWT.");
-  }
-
-  return data.token;
-}
-
 export async function getEventsResult(): Promise<EventsLoadResult> {
   const cmsUrl = getCmsUrl();
 
   try {
-    const token = await getApiAccessToken(cmsUrl);
+    const token = getApiToken();
     const url = new URL("/api/public/events", cmsUrl);
 
     const response = await fetch(url.toString(), {

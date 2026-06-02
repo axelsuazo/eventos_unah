@@ -7,7 +7,10 @@ type UserWithRole = {
 export type AppRole = NonNullable<UserWithRole["role"]>;
 
 export function getRole(user: unknown): AppRole | undefined {
-  return (user as UserWithRole | undefined)?.role;
+  if (!user || typeof user !== 'object') return undefined
+  // Forzamos la lectura de role incluso si el tipado es estricto
+  const u = user as any
+  return u.role
 }
 
 export function hasAdminAccess(user: unknown) {

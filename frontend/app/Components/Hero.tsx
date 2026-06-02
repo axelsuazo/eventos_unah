@@ -1,45 +1,46 @@
-export default function Hero() {
-  return (
-    <section id="inicio" className="bg-[#183972] px-6 py-20 text-white dark:bg-slate-950">
-      <div className="mx-auto grid max-w-7xl items-center gap-10 md:grid-cols-[1.15fr_0.85fr]">
-        <div>
-          <h1 className="mt-6 max-w-3xl text-4xl font-extrabold leading-tight md:text-6xl">
-            Bienvenidos al portal oficial de eventos UNAH
-          </h1>
+import { getEventsResult } from "@/features/events/api";
+import { getImageUrl, getModalityLabel } from "@/features/events/types";
+import HeroCarousel, { type HeroSlide } from "@/app/Components/HeroCarousel";
 
-          <p className="mt-5 max-w-2xl text-base leading-7 text-blue-50 md:text-lg">
-            Aquí encontrarás una lista completa y actualizada de todos los eventos académicos,
-            culturales, deportivos y administrativos que se realizan en
-            nuestras instalaciones.
-          </p>
+const FALLBACK_SLIDE: HeroSlide = {
+  id: "hero-static",
+  title: "Bienvenidos al portal oficial de eventos UNAH",
+  subtitle: "Portal de eventos universitarios",
+  description:
+    "Aquí encontrarás una lista completa y actualizada de todos los eventos académicos, culturales y deportivos...",
+  buttonText: "Ver eventos",
+  buttonHref: "#eventos",
+  image: "/eventos/feria.jpg",
+  imageAlt: "Actividad académica universitaria",
+  cardEyebrow: "¿Qué Haremos este Mes en la UNAH?",
+  cardTitle: "Explora la Agenda Completa",
+  cardDescription:
+    "No te pierdas charlas, seminarios, actividades deportivas y culturales.",
+};
 
-          <div className="mt-8 flex flex-col gap-3 sm:flex-row">
-            <a
-              href="#eventos"
-              className="rounded-[0.5rem] bg-[#f5c400] px-6 py-3 text-center font-bold text-[#183972] transition hover:bg-[#ffd52e]"
-            >
-              Ver eventos
-            </a>
-          </div>
-        </div>
+export default async function Hero() {
+  const { events } = await getEventsResult();
 
-        <div className="rounded-[0.5rem] bg-white/10 p-4 shadow-2xl ring-1 ring-white/15">
-          <img
-            src="/eventos/feria.jpg"
-            alt="Actividad académica universitaria"
-            className="h-72 w-full rounded-[0.5rem] object-cover"
-          />
-          <div className="mt-4 rounded-[0.5rem] bg-white p-5 text-[#183972] dark:bg-slate-900 dark:text-slate-100">
-            <p className="text-sm font-semibold text-gray-500 dark:text-slate-300">
-              ¿Qué Haremos este Mes en la UNAH?
-            </p>
-            <h2 className="mt-1 text-xl font-bold">Explora la Agenda Completa</h2>
-            <p className="mt-2 text-sm text-gray-600 dark:text-slate-300">
-              No te pierdas charlas, seminarios, actividades deportivas y culturales.
-            </p>
-          </div>
-        </div>
-      </div>
-    </section>
-  );
+  const apiSlides: HeroSlide[] = events.slice(0, 6).map((event) => ({
+    id: event.id,
+    title: event.title,
+    subtitle: event.category || "Evento UNAH",
+    description:
+      event.description ||
+      "Consulta los detalles de este evento disponible para la comunidad universitaria.",
+    buttonText: "Ver eventos",
+    buttonHref: "#eventos",
+    image: getImageUrl(event.image),
+    imageAlt: event.title,
+    cardEyebrow: getModalityLabel(event.modality),
+    cardTitle: event.location || "Evento universitario",
+    cardDescription: event.organizer
+      ? `Organizado por ${event.organizer}`
+      : "Actividad disponible para la comunidad universitaria.",
+  }));
+
+  const slides =
+    apiSlides.length > 0 ? [FALLBACK_SLIDE, ...apiSlides] : [FALLBACK_SLIDE];
+
+  return <HeroCarousel slides={slides} />;
 }

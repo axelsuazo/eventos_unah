@@ -1,10 +1,5 @@
 import type { Access, CollectionConfig } from 'payload'
-
-const isAdminOrCoAdmin: Access = ({ req }) => {
-  const user = req.user as { role?: string } | null | undefined
-
-  return user?.role === 'admin' || user?.role === 'co-admin'
-}
+import { isAdminOrCoAdmin } from './access' // Asegúrate de que esta función use req.user correctamente
 
 const publicRead: Access = () => true
 
@@ -23,7 +18,7 @@ export const Categories: CollectionConfig = {
 
   admin: {
     useAsTitle: 'name',
-    defaultColumns: ['name', 'id', 'createdAt'],
+    defaultColumns: ['name', 'slug', 'createdAt'],
   },
 
   access: {
@@ -44,12 +39,12 @@ export const Categories: CollectionConfig = {
           data.name = data.name.trim()
         }
 
-        if (typeof data.id === 'string') {
-          data.id = createSlug(data.id)
+        if (typeof data.slug === 'string') {
+          data.slug = createSlug(data.slug)
         }
 
-        if (!data.id && typeof data.name === 'string') {
-          data.id = createSlug(data.name)
+        if (!data.slug && typeof data.name === 'string') {
+          data.slug = createSlug(data.name)
         }
 
         return data
@@ -73,9 +68,9 @@ export const Categories: CollectionConfig = {
       },
     },
     {
-      name: 'id',
+      name: 'slug',
       type: 'text',
-      label: 'Identificador',
+      label: 'Slug / Identificador',
       required: true,
       unique: true,
       admin: {

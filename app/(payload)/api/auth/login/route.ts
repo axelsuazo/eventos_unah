@@ -52,13 +52,30 @@ export async function POST(request: Request) {
     
     const payload = await getPayload({ config })
 
-    // Verificación de seguridad para desarrollo: ¿Existen usuarios?
+    // Verificación de seguridad: ¿Hay algún usuario en el sistema?
     const userCount = await payload.count({ collection: 'users' })
     if (userCount.totalDocs === 0) {
-      console.error(`[Login Error]: No hay usuarios registrados en la base de datos. Vaya a /admin para crear el primero.`)
+      console.error(`[Login Error]: No hay usuarios registrados. Vaya a /admin para crear el primero.`)
       return Response.json(
-        { error: 'NO_USERS_EXIST', message: 'No hay usuarios en la base de datos.' },
+        { error: 'NO_USERS_EXIST', message: 'No existen usuarios en el CMS. Cree uno en /admin.' },
         { status: 401 }
+      )
+    }
+
+    // Verificación adicional para debugging: ¿Existe el usuario?
+    const findUser = await payload.find({
+      collection: 'users',
+      where: { email: { equals: email } },
+    })
+
+    if (findUser.totalDocs === 0) {
+      console.error(`[Login Error]: El usuario ${email} NO existe en la base de datos.`)
+      return Response.json(
+        {
+          error: 'USER_NOT_FOUND',
+          message: `El usuario ${email} no existe en el CMS. Vaya a /admin y créelo.`,
+        },
+        { status: 401 },
       )
     }
 
@@ -102,16 +119,23 @@ export async function POST(request: Request) {
     })
   } catch (error) {
     if (error instanceof Error && error.name === 'AuthenticationError') {
-      console.error(`[Login Error]: Contraseña incorrecta para ${email}`)
+      console.error(`[Login Error]: Credenciales inválidas o usuario inexistente: ${email}`)
+      return Response.json(
+        {
+          error: 'INVALID_CREDENTIALS',
+          message: 'Credenciales inválidas.',
+        },
+        { status: 401 },
+      )
     } else {
       console.error('[Login Error]: Error inesperado durante el login:', error)
+      return Response.json(
+        {
+          error: 'SERVER_ERROR',
+          message: 'Error interno del servidor. No se pudo establecer conexión con la base de datos.',
+        },
+        { status: 500 },
+      )
     }
-    return Response.json(
-      {
-        error: 'INVALID_CREDENTIALS',
-        message: 'Credenciales inválidas.',
-      },
-      { status: 401 },
-    )
   }
 }
