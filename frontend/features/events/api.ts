@@ -31,9 +31,9 @@ function getCmsUrl() {
 }
 
 function getApiToken() {
-  const token = process.env.CMS_API_TOKEN;
+  const token = process.env.CMS_STATIC_API_TOKEN || process.env.CMS_API_TOKEN;
   if (!token) {
-    throw new Error("Falta la variable CMS_API_TOKEN en el frontend.");
+    throw new Error("Falta el token de API (CMS_STATIC_API_TOKEN o CMS_API_TOKEN) en las variables de entorno del frontend.");
   }
   return token;
 }
@@ -77,7 +77,9 @@ export async function getEventsResult(): Promise<EventsLoadResult> {
     if (!response.ok) {
       return {
         events: [],
-        error: `Payload respondió con error ${response.status} ${response.statusText}.`,
+        error: response.status === 404 
+          ? `No se encontró el endpoint /api/public/events. Verifica si la ruta personalizada existe en el CMS.`
+          : `Payload respondió con error ${response.status}: ${response.statusText}`,
       };
     }
 

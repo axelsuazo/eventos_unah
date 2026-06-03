@@ -199,7 +199,7 @@ export default function EventManager({
                   type="search"
                   value={searchInput}
                   onChange={(event) => setSearchInput(event.target.value)}
-                  placeholder="Search..."
+                  placeholder="Buscar..."
                   className="h-10 w-full rounded-full border border-transparent bg-white px-7 pr-20 text-base font-semibold text-gray-700 shadow-inner outline-none transition-all duration-300 placeholder:text-gray-300 focus:border-gray-100 focus:bg-white focus:ring-0 dark:bg-slate-950 dark:text-slate-100 dark:placeholder:text-slate-600"
                 />
 
