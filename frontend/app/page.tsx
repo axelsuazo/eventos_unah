@@ -1,11 +1,14 @@
-import HomeClient from "@/app/Components/HomeClient";
-import { getEventsResult } from "@/features/events/api";
+import EventManager from './Components/EventManager';
+import { getEventsResult } from '@/features/events/api';
 
-export const dynamic = "force-dynamic";
-export const revalidate = 0;
-
-export default async function Home() {
+/**
+ * Página principal del frontend que muestra la lista de eventos.
+ * Carga los eventos iniciales desde la API de Payload CMS.
+ */
+export default async function HomePage() {
   const { events, error } = await getEventsResult();
 
-  return <HomeClient initialEvents={events} initialLoadError={error} />;
+  return (
+    <EventManager initialEvents={events} initialLoadError={error} />
+  );
 }

@@ -22,30 +22,41 @@ type PayloadEvent = {
 };
 
 function getCmsUrl() {
-  const vercelUrl = process.env.VERCEL_URL ? `https://${process.env.VERCEL_URL}` : ''
+  const rawUrl = process.env.CMS_URL || process.env.NEXT_PUBLIC_CMS_URL;
 
-  const rawUrl =
-    process.env.CMS_URL ||
-    process.env.NEXT_PUBLIC_CMS_URL ||
-    process.env.NEXT_PUBLIC_SERVER_URL ||
-    vercelUrl ||
-    "http://localhost:3000";
+  if (!rawUrl) {
+    throw new Error(
+      "Falta CMS_URL o NEXT_PUBLIC_CMS_URL en las variables de entorno del frontend."
+    );
+  }
 
-  const url = rawUrl.replace(/\/$/, "");
-  
-  if (process.env.NODE_ENV === 'production' && url.includes('localhost')) {
-    console.warn("Advertencia: CMS_URL apunta a localhost en un entorno de producción.");
+  const url = rawUrl.trim().replace(/\/+$/, "");
+
+  if (!url.startsWith("http://") && !url.startsWith("https://")) {
+    throw new Error(
+      "CMS_URL debe iniciar con http:// o https://. Revisa las variables de entorno del frontend."
+    );
+  }
+
+  if (process.env.NODE_ENV === "production" && url.includes("localhost")) {
+    throw new Error(
+      "CMS_URL apunta a localhost en producción. Debe apuntar al backend desplegado en Vercel."
+    );
   }
 
   return url;
 }
 
 function getApiToken() {
-  const token = process.env.CMS_STATIC_API_TOKEN || process.env.CMS_API_TOKEN;
+  const token = process.env.CMS_API_TOKEN || process.env.CMS_STATIC_API_TOKEN;
+
   if (!token) {
-    throw new Error("Falta el token de API (CMS_STATIC_API_TOKEN o CMS_API_TOKEN) en las variables de entorno del frontend.");
+    throw new Error(
+      "Falta CMS_API_TOKEN en las variables de entorno del frontend."
+    );
   }
-  return token;
+
+  return token.trim();
 }
 
 function getErrorMessage(error: unknown) {
@@ -71,14 +82,14 @@ function mapPayloadEvent(event: PayloadEvent): EventItem {
 }
 
 export async function getEventsResult(): Promise<EventsLoadResult> {
-  const cmsUrl = getCmsUrl();
-
   try {
+    const cmsUrl = getCmsUrl();
     const token = getApiToken();
-    const url = new URL("/api/public/events", cmsUrl);
+    const url = new URL("/api/public/events", cmsUrl); // No change needed here, fetch accepts URL object directly
 
-    const response = await fetch(url.toString(), {
+    const response = await fetch(url, { // Change from url.toString() to url
       headers: {
+        Accept: "application/json",
         Authorization: `Bearer ${token}`,
       },
       cache: "no-store",
@@ -87,9 +98,10 @@ export async function getEventsResult(): Promise<EventsLoadResult> {
     if (!response.ok) {
       return {
         events: [],
-        error: response.status === 404 
-          ? `No se encontró el endpoint /api/public/events. Verifica si la ruta personalizada existe en el CMS.`
-          : `Payload respondió con error ${response.status}: ${response.statusText}`,
+        error:
+          response.status === 404
+            ? "No se encontró el endpoint /api/public/events. Verifica que la ruta exista en el backend."
+            : `Payload respondió con error ${response.status}: ${response.statusText}`,
       };
     }
 

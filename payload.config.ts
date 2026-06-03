@@ -29,10 +29,15 @@ if (!payloadSecret) {
   )
 }
 
-// Detectar URL de Vercel para evitar errores de CSRF en entornos de preview y producción
-const vercelUrl = process.env.VERCEL_URL ? `https://${process.env.VERCEL_URL}` : ''
-const serverURL = (process.env.NEXT_PUBLIC_SERVER_URL || vercelUrl || 'http://localhost:3000').replace(/\/$/, '')
-const frontendURL = (process.env.FRONTEND_URL || '').replace(/\/$/, '')
+// Detectar URL de Vercel para evitar errores de CSRF (Logout 400)
+const vercelUrl = process.env.VERCEL_PROJECT_PRODUCTION_URL 
+  ? `https://${process.env.VERCEL_PROJECT_PRODUCTION_URL}` 
+  : process.env.VERCEL_URL 
+    ? `https://${process.env.VERCEL_URL}` 
+    : 'http://localhost:3000'
+
+const serverURL = (process.env.NEXT_PUBLIC_SERVER_URL || vercelUrl).replace(/\/$/, '')
+const frontendURL = (process.env.FRONTEND_URL || serverURL).replace(/\/$/, '')
 
 const allowedOrigins = [serverURL, frontendURL, vercelUrl].filter(Boolean)
 

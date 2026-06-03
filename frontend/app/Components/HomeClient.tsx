@@ -1,3 +1,4 @@
+import React from "react";
 import EventManager from "@/app/Components/EventManager";
 import Footer from "@/app/Components/Footer";
 import Hero from "@/app/Components/Hero";
