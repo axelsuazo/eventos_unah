@@ -27,7 +27,13 @@ function getCmsUrl() {
     process.env.NEXT_PUBLIC_CMS_URL ||
     "http://localhost:3001";
 
-  return rawUrl.replace(/\/$/, "");
+  const url = rawUrl.replace(/\/$/, "");
+  
+  if (process.env.NODE_ENV === 'production' && url.includes('localhost')) {
+    console.warn("Advertencia: CMS_URL apunta a localhost en un entorno de producción.");
+  }
+
+  return url;
 }
 
 function getApiToken() {
