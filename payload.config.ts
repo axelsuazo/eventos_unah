@@ -29,8 +29,8 @@ if (!payloadSecret) {
   )
 }
 
-const serverURL = process.env.NEXT_PUBLIC_SERVER_URL || 'http://localhost:3001'
-const frontendURL = process.env.FRONTEND_URL || 'http://localhost:3000'
+const serverURL = (process.env.NEXT_PUBLIC_SERVER_URL || '').replace(/\/$/, '')
+const frontendURL = (process.env.FRONTEND_URL || '').replace(/\/$/, '')
 
 export default buildConfig({
   admin: {

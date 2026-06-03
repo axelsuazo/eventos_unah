@@ -102,6 +102,7 @@ export async function verifyJwtRequest(
   // 1. Verificar si el token es el API_KEY estático (Shared Secret)
   const staticKey = process.env.CMS_STATIC_API_TOKEN
   if (staticKey && token === staticKey) {
+    console.log('[Auth]: Acceso concedido mediante CMS_STATIC_API_TOKEN')
     return {
       ok: true,
       payload: {
@@ -110,6 +111,10 @@ export async function verifyJwtRequest(
         role: 'admin', // El frontend actuará con permisos de admin para ver eventos publicados
       },
     }
+  }
+
+  if (!staticKey) {
+    console.error('[Auth Error]: CMS_STATIC_API_TOKEN no está definido en el servidor')
   }
 
   try {
