@@ -22,10 +22,14 @@ type PayloadEvent = {
 };
 
 function getCmsUrl() {
+  const vercelUrl = process.env.VERCEL_URL ? `https://${process.env.VERCEL_URL}` : ''
+
   const rawUrl =
     process.env.CMS_URL ||
     process.env.NEXT_PUBLIC_CMS_URL ||
-    "http://localhost:3001";
+    process.env.NEXT_PUBLIC_SERVER_URL ||
+    vercelUrl ||
+    "http://localhost:3000";
 
   const url = rawUrl.replace(/\/$/, "");
   

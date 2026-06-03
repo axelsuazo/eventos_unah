@@ -206,6 +206,7 @@ export default function EventManager({
                 <button
                   type="submit"
                   className="absolute right-0 left-158   top-1/2 flex h-10 w-10 -translate-y-1/2 items-center justify-center rounded-full bg-blue-900 text-white shadow-xl transition-all duration-300 hover:scale-105 hover:bg-yellow-400 active:scale-95 dark:bg-yellow-300 dark:text-[#183972] dark:hover:bg-yellow-200"
+                  className="absolute right-0 top-1/2 flex h-10 w-10 -translate-y-1/2 items-center justify-center rounded-full bg-blue-900 text-white shadow-xl transition-all duration-300 hover:scale-105 hover:bg-yellow-400 active:scale-95 dark:bg-yellow-300 dark:text-[#183972] dark:hover:bg-yellow-200"
                   aria-label="Buscar eventos"
                 >
                   <svg

@@ -29,8 +29,12 @@ if (!payloadSecret) {
   )
 }
 
-const serverURL = (process.env.NEXT_PUBLIC_SERVER_URL || '').replace(/\/$/, '')
+// Detectar URL de Vercel para evitar errores de CSRF en entornos de preview y producción
+const vercelUrl = process.env.VERCEL_URL ? `https://${process.env.VERCEL_URL}` : ''
+const serverURL = (process.env.NEXT_PUBLIC_SERVER_URL || vercelUrl || 'http://localhost:3000').replace(/\/$/, '')
 const frontendURL = (process.env.FRONTEND_URL || '').replace(/\/$/, '')
+
+const allowedOrigins = [serverURL, frontendURL, vercelUrl].filter(Boolean)
 
 export default buildConfig({
   admin: {
@@ -42,8 +46,8 @@ export default buildConfig({
 
   collections: [Users, Media, Categories, Events],
 
-  cors: [serverURL, frontendURL],
-  csrf: [serverURL, frontendURL],
+  cors: allowedOrigins,
+  csrf: allowedOrigins,
 
   editor: lexicalEditor(),
 
