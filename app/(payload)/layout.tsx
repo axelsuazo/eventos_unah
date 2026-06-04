@@ -1,6 +1,6 @@
 import type { ServerFunctionClient } from 'payload'
 
-import config from '@payload-config'
+import config from '../../payload.config'
 import '@payloadcms/next/css'
 import './custom.scss'
 import {

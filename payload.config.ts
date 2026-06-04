@@ -51,8 +51,8 @@ export default buildConfig({
 
   collections: [Users, Media, Categories, Events],
 
-  cors: allowedOrigins,
-  csrf: allowedOrigins,
+  cors: [process.env.NEXT_PUBLIC_FRONTEND_URL || '*'],
+  csrf: [process.env.NEXT_PUBLIC_FRONTEND_URL || '*'],
 
   editor: lexicalEditor(),
 

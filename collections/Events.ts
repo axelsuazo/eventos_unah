@@ -14,7 +14,7 @@ export const Events: CollectionConfig = {
   },
 
   access: {
-    read: canReadPublishedEvents,
+    read: () => true,
     create: isAdminOrCoAdmin,
     update: isAdminOrCoAdmin,
     delete: isAdminOrCoAdmin,
