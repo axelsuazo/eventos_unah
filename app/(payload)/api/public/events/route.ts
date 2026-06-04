@@ -1,128 +1,197 @@
-import config from '@payload-config'
-import { getPayload } from 'payload'
+import config from "@payload-config";
+import { getPayload } from "payload";
+import { NextRequest, NextResponse } from "next/server";
 
-import { withJwtAuth } from '@/lib/auth/jwt'
+const PLACEHOLDER_IMAGE_URL = "/eventos/placeholder-evento.svg";
 
-const PLACEHOLDER_IMAGE_URL = '/eventos/placeholder-evento.svg'
+export const dynamic = "force-dynamic";
+export const revalidate = 0;
 
 type RelatedCategory =
   | string
   | number
   | {
-      id?: string | number
-      name?: string
-      title?: string
-      slug?: string
+      id?: string | number;
+      name?: string;
+      title?: string;
+      slug?: string;
     }
   | null
-  | undefined
+  | undefined;
 
 type RelatedImage =
   | string
   | number
   | {
-      id?: string | number
-      url?: string
-      alt?: string
-      filename?: string
+      id?: string | number;
+      url?: string;
+      alt?: string;
+      filename?: string;
     }
   | null
-  | undefined
+  | undefined;
 
 type PayloadEventDocument = {
-  id?: string | number
-  title?: string
-  description?: string
-  date?: string
-  endDate?: string
-  location?: string
-  category?: RelatedCategory
-  organizer?: string
-  modality?: string
-  published?: boolean
-  image?: RelatedImage
+  id?: string | number;
+  title?: string;
+  description?: string;
+  date?: string;
+  endDate?: string;
+  location?: string;
+  category?: RelatedCategory;
+  organizer?: string;
+  modality?: string;
+  published?: boolean;
+  image?: RelatedImage;
+};
+
+function isAuthorized(request: NextRequest) {
+  const expectedToken = process.env.CMS_STATIC_API_TOKEN?.trim();
+
+  if (!expectedToken) {
+    throw new Error("CMS_STATIC_API_TOKEN no está definido en el backend.");
+  }
+
+  const authorization = request.headers.get("authorization") || "";
+  const [scheme, token] = authorization.split(" ");
+
+  if (scheme?.toLowerCase() !== "bearer") {
+    return false;
+  }
+
+  if (!token) {
+    return false;
+  }
+
+  return token.trim() === expectedToken;
 }
 
 function getCategoryLabel(category: RelatedCategory) {
   if (!category) {
-    return 'General'
+    return "General";
   }
 
-  if (typeof category === 'string' || typeof category === 'number') {
-    return String(category)
+  if (typeof category === "string" || typeof category === "number") {
+    return String(category);
   }
 
-  return category.name || category.title || category.slug || 'General'
+  return category.name || category.title || category.slug || "General";
 }
 
 function getPublicImage(image: RelatedImage, title: string) {
-  if (!image || typeof image === 'string' || typeof image === 'number') {
+  if (!image || typeof image === "string" || typeof image === "number") {
     return {
       url: PLACEHOLDER_IMAGE_URL,
       alt: `Imagen genérica para ${title}`,
-    }
+    };
   }
 
-  const url = image.url || (image.filename ? `/api/media/file/${image.filename}` : '')
+  const url = image.url || (image.filename ? `/api/media/file/${image.filename}` : "");
 
   if (!url) {
     return {
       url: PLACEHOLDER_IMAGE_URL,
       alt: `Imagen genérica para ${title}`,
-    }
+    };
   }
 
   return {
     url,
     alt: image.alt || title,
-  }
+    filename: image.filename || "",
+  };
 }
 
 function toPublicEvent(event: PayloadEventDocument) {
-  const title = event.title || 'Evento sin título'
+  const title = event.title || "Evento sin título";
 
   return {
-    id: String(event.id || ''),
+    id: String(event.id || ""),
     title,
-    description: event.description || 'Sin descripción disponible.',
-    date: event.date || '',
-    endDate: event.endDate || '',
-    location: event.location || 'UNAH',
+    description: event.description || "Sin descripción disponible.",
+    date: event.date || "",
+    endDate: event.endDate || "",
+    location: event.location || "UNAH",
     category: getCategoryLabel(event.category),
-    organizer: event.organizer || 'UNAH',
-    modality: event.modality || 'presencial',
+    organizer: event.organizer || "UNAH",
+    modality: event.modality || "presencial",
     published: event.published ?? true,
     image: getPublicImage(event.image, title),
-  }
+  };
 }
 
-export const GET = withJwtAuth(async () => {
-  const payload = await getPayload({ config })
+function sortEvents(events: ReturnType<typeof toPublicEvent>[]) {
+  const now = new Date();
 
-  const result = await payload.find({
-    collection: 'events',
-    depth: 1,
-    limit: 100,
-    sort: 'date',
-    where: {
-      published: {
-        equals: true,
+  return events.sort((a, b) => {
+    const dateA = new Date(a.date).getTime();
+    const dateB = new Date(b.date).getTime();
+
+    const safeDateA = Number.isNaN(dateA) ? 0 : dateA;
+    const safeDateB = Number.isNaN(dateB) ? 0 : dateB;
+
+    const aIsPast = safeDateA < now.getTime();
+    const bIsPast = safeDateB < now.getTime();
+
+    if (aIsPast !== bIsPast) {
+      return aIsPast ? 1 : -1;
+    }
+
+    return safeDateA - safeDateB;
+  });
+}
+
+export async function GET(request: NextRequest) {
+  try {
+    if (!isAuthorized(request)) {
+      return NextResponse.json(
+        {
+          error: "UNAUTHORIZED",
+          message: "Token inválido o ausente.",
+        },
+        { status: 401 }
+      );
+    }
+
+    const payload = await getPayload({ config });
+
+    const result = await payload.find({
+      collection: "events",
+      depth: 1,
+      limit: 100,
+      sort: "date",
+      where: {
+        published: {
+          equals: true,
+        },
       },
-    },
-  })
+    });
 
-  const docs = (result.docs as PayloadEventDocument[]).map(toPublicEvent)
+    const docs = sortEvents(
+      (result.docs as PayloadEventDocument[]).map(toPublicEvent)
+    );
 
-  return Response.json({
-    docs,
-    totalDocs: docs.length,
-    limit: result.limit,
-    totalPages: result.totalPages,
-    page: result.page,
-    pagingCounter: result.pagingCounter,
-    hasPrevPage: result.hasPrevPage,
-    hasNextPage: result.hasNextPage,
-    prevPage: result.prevPage ?? null,
-    nextPage: result.nextPage ?? null,
-  })
-})
+    return NextResponse.json({
+      docs,
+      totalDocs: docs.length,
+      limit: result.limit,
+      totalPages: result.totalPages,
+      page: result.page,
+      pagingCounter: result.pagingCounter,
+      hasPrevPage: result.hasPrevPage,
+      hasNextPage: result.hasNextPage,
+      prevPage: result.prevPage ?? null,
+      nextPage: result.nextPage ?? null,
+    });
+  } catch (error) {
+    console.error("[API public/events]:", error);
+
+    return NextResponse.json(
+      {
+        error: "INTERNAL_SERVER_ERROR",
+        message: "No se pudieron cargar los eventos.",
+      },
+      { status: 500 }
+    );
+  }
+}

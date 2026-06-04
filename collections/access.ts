@@ -1,37 +1,47 @@
 import type { Access } from "payload";
 
-type UserWithRole = {
-  role?: "admin" | "co-admin" | "viewer";
+type AppUser = {
+  role?: "admin" | "coadmin" | "editor" | "user" | null;
 };
 
-export type AppRole = NonNullable<UserWithRole["role"]>;
-
-export function getRole(user: unknown): AppRole | undefined {
-  if (!user || typeof user !== 'object') return undefined
-  // Forzamos la lectura de role incluso si el tipado es estricto
-  const u = user as any
-  return u.role
+function getUserRole(user: unknown) {
+  const typedUser = user as AppUser | null | undefined;
+  return typedUser?.role;
 }
 
-export function hasAdminAccess(user: unknown) {
-  return getRole(user) === "admin";
-}
-
-export function hasEditorAccess(user: unknown) {
-  const role = getRole(user);
-  return role === "admin" || role === "co-admin";
-}
-
-export const isAdmin: Access = ({ req: { user } }) => {
-  return hasAdminAccess(user);
+export const isLoggedIn: Access = ({ req }) => {
+  return Boolean(req.user);
 };
 
-export const isAdminOrCoAdmin: Access = ({ req: { user } }) => {
-  return hasEditorAccess(user);
+export const isAdmin: Access = ({ req }) => {
+  if (!req.user) return false;
+
+  const role = getUserRole(req.user);
+
+  /*
+    Esto ayuda si tu usuario fue creado antes de agregar el campo role.
+    Si no tiene role, temporalmente se trata como admin.
+  */
+  if (!role) return true;
+
+  return role === "admin";
 };
 
-export const canReadPublishedEvents: Access = ({ req: { user } }) => {
-  if (hasEditorAccess(user)) return true;
+export const isAdminOrCoAdmin: Access = ({ req }) => {
+  if (!req.user) return false;
+
+  const role = getUserRole(req.user);
+
+
+  if (!role) return true;
+
+  return role === "admin" || role === "coadmin";
+};
+
+export const canReadPublishedEvents: Access = ({ req }) => {
+  if (req.user) {
+    return true;
+  }
 
   return {
     published: {

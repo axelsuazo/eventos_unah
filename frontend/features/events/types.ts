@@ -55,12 +55,13 @@ export type EventsLoadResult = {
 const fallbackEventImage = "/eventos/placeholder-evento.svg";
 
 function getCmsPublicUrl() {
-  const rawUrl =
-    process.env.NEXT_PUBLIC_CMS_URL ||
-    process.env.CMS_URL ||
-    "http://localhost:3001";
+  const rawUrl = process.env.NEXT_PUBLIC_CMS_URL;
 
-  return rawUrl.replace(/\/$/, "");
+  if (!rawUrl) {
+    return "";
+  }
+
+  return rawUrl.trim().replace(/\/+$/, "");
 }
 
 function withCmsUrl(path: string) {
@@ -71,6 +72,11 @@ function withCmsUrl(path: string) {
   }
 
   const cmsUrl = getCmsPublicUrl();
+
+  if (!cmsUrl) {
+    return path.startsWith("/") ? path : `/${path}`;
+  }
+
   const normalizedPath = path.startsWith("/") ? path : `/${path}`;
 
   return `${cmsUrl}${normalizedPath}`;
@@ -85,11 +91,17 @@ function normalizeModality(value: string) {
 }
 
 export function getImageUrl(image: EventImage) {
-  if (!image) return withCmsUrl(fallbackEventImage);
+  if (!image) return fallbackEventImage;
 
   if (typeof image === "string") {
-    if (image.startsWith("http://") || image.startsWith("https://")) return image;
-    if (image.startsWith("/")) return withCmsUrl(image);
+    if (image.startsWith("http://") || image.startsWith("https://")) {
+      return image;
+    }
+
+    if (image.startsWith("/")) {
+      return withCmsUrl(image);
+    }
+
     return withCmsUrl(`/api/media/file/${image}`);
   }
 
@@ -101,7 +113,7 @@ export function getImageUrl(image: EventImage) {
     return withCmsUrl(`/api/media/file/${image.filename}`);
   }
 
-  return withCmsUrl(fallbackEventImage);
+  return fallbackEventImage;
 }
 
 export function getModalityLabel(modality: string) {

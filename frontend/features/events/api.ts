@@ -1,3 +1,5 @@
+import "server-only";
+
 import {
   type EventImage,
   type EventItem,
@@ -48,14 +50,11 @@ function getCmsUrl() {
 }
 
 function getApiToken() {
-  const token = 
-    process.env.CMS_API_TOKEN || 
-    process.env.CMS_STATIC_API_TOKEN || 
-    process.env.NEXT_PUBLIC_CMS_STATIC_API_TOKEN;
+  const token = process.env.CMS_STATIC_API_TOKEN || process.env.CMS_API_TOKEN;
 
   if (!token) {
     throw new Error(
-      "Falta CMS_API_TOKEN en las variables de entorno del frontend."
+      "Falta CMS_STATIC_API_TOKEN o CMS_API_TOKEN en las variables de entorno del frontend."
     );
   }
 
@@ -88,9 +87,11 @@ export async function getEventsResult(): Promise<EventsLoadResult> {
   try {
     const cmsUrl = getCmsUrl();
     const token = getApiToken();
-    const url = new URL("/api/public/events", cmsUrl); // No change needed here, fetch accepts URL object directly
 
-    const response = await fetch(url, { // Change from url.toString() to url
+    const url = new URL("/api/public/events", cmsUrl);
+
+    const response = await fetch(url.toString(), {
+      method: "GET",
       headers: {
         Accept: "application/json",
         Authorization: `Bearer ${token}`,
@@ -99,12 +100,16 @@ export async function getEventsResult(): Promise<EventsLoadResult> {
     });
 
     if (!response.ok) {
+      const errorText = await response.text().catch(() => "");
+
       return {
         events: [],
         error:
           response.status === 404
             ? "No se encontró el endpoint /api/public/events. Verifica que la ruta exista en el backend."
-            : `Payload respondió con error ${response.status}: ${response.statusText}`,
+            : `Payload respondió con error ${response.status}: ${
+                errorText || response.statusText
+              }`,
       };
     }
 
