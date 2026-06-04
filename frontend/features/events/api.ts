@@ -48,7 +48,10 @@ function getCmsUrl() {
 }
 
 function getApiToken() {
-  const token = process.env.CMS_API_TOKEN || process.env.CMS_STATIC_API_TOKEN;
+  const token = 
+    process.env.CMS_API_TOKEN || 
+    process.env.CMS_STATIC_API_TOKEN || 
+    process.env.NEXT_PUBLIC_CMS_STATIC_API_TOKEN;
 
   if (!token) {
     throw new Error(

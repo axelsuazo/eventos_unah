@@ -16,6 +16,7 @@ const dirname = path.dirname(filename)
 
 const databaseUrl = process.env.DATABASE_URL
 const payloadSecret = process.env.PAYLOAD_SECRET
+const staticApiToken = process.env.CMS_STATIC_API_TOKEN
 
 if (!databaseUrl) {
   throw new Error(
@@ -26,6 +27,12 @@ if (!databaseUrl) {
 if (!payloadSecret) {
   throw new Error(
     'PAYLOAD_SECRET no está definido. Revisa el archivo .env.local del CMS.',
+  )
+}
+
+if (!staticApiToken) {
+  throw new Error(
+    'CMS_STATIC_API_TOKEN no está definido. El frontend no podrá consultar eventos públicos.',
   )
 }
 
