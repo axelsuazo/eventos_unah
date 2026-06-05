@@ -87,15 +87,24 @@ export async function getEventsResult(): Promise<EventsLoadResult> {
   try {
     const cmsUrl = getCmsUrl();
     const token = getApiToken();
+    // Token de bypass de Vercel para saltar la protección de despliegue
+    const vercelBypassToken = process.env.VERCEL_AUTOMATION_BYPASS_TOKEN;
 
     const url = new URL("/api/public/events", cmsUrl);
 
+    const headers: Record<string, string> = {
+      Accept: "application/json",
+      Authorization: `Bearer ${token}`,
+    };
+
+    // Si el token de bypass existe, se añade la cabecera requerida por Vercel
+    if (vercelBypassToken) {
+      headers["x-vercel-protection-bypass"] = vercelBypassToken;
+    }
+
     const response = await fetch(url.toString(), {
       method: "GET",
-      headers: {
-        Accept: "application/json",
-        Authorization: `Bearer ${token}`,
-      },
+      headers,
       cache: "no-store",
     });
 
