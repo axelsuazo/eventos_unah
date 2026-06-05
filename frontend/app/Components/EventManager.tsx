@@ -179,42 +179,43 @@ export default function EventManager({
   return (
     <section
       id="eventos"
-      className="bg-gray-50 px-6 py-5 dark:bg-slate-950 md:py-14"
+      className="bg-gray-50 px-4 py-10 dark:bg-slate-950 sm:px-6 md:py-14"
     >
       <div className="mx-auto max-w-7xl">
-       
+        <div className="mx-auto max-w-4xl text-center">
+          <p className="text-xs font-black uppercase tracking-[0.22em] text-[#f5c400]">
+            Agenda universitaria
+          </p>
 
-        <div className="mt-10 text-center py-15">
-          <h2 className="text-3xl font-black text-[#183972] dark:text-slate-100 md:text-5xl">
+          <h2 className="mt-3 text-3xl font-black leading-tight text-[#183972] dark:text-slate-100 sm:text-4xl md:text-5xl">
             Eventos disponibles para la comunidad universitaria
           </h2>
         </div>
-        
 
-        <form onSubmit={submitSearch} className="mt-8">
-          <div className="mx-auto max-w-5xl">
-            <div className=" ">
-              <div className="relative mx-auto flex max-w-2xl items-center">
+        <form onSubmit={submitSearch} className="mt-8 w-full">
+          <div className="mx-auto w-full max-w-5xl">
+            <div className="rounded-[2rem] border border-gray-100 bg-white/90 p-3 shadow-lg shadow-slate-900/5 dark:border-slate-800 dark:bg-slate-900/80">
+              <div className="relative mx-auto flex w-full max-w-2xl items-center">
                 <input
                   type="search"
                   value={searchInput}
                   onChange={(event) => setSearchInput(event.target.value)}
-                  placeholder="Buscar..."
-                  className="h-10 w-full rounded-full border border-transparent bg-white px-7 pr-20 text-base font-semibold text-gray-700 shadow-inner outline-none transition-all duration-300 placeholder:text-gray-300 focus:border-gray-100 focus:bg-white focus:ring-0 dark:bg-slate-950 dark:text-slate-100 dark:placeholder:text-slate-600"
+                  placeholder="Buscar eventos por nombre, lugar, categoría..."
+                  className="h-12 w-full min-w-0 rounded-full border border-gray-200 bg-white px-5 pr-14 text-sm font-semibold text-gray-700 outline-none transition-all duration-300 placeholder:text-gray-400 focus:border-[#183972] focus:ring-4 focus:ring-[#183972]/10 dark:border-slate-700 dark:bg-slate-950 dark:text-slate-100 dark:placeholder:text-slate-500 sm:px-7 sm:pr-16 sm:text-base"
                 />
 
                 <button
                   type="submit"
-                  className="absolute right-0 top-1/2 flex h-10 w-10 -translate-y-1/2 items-center justify-center rounded-full bg-blue-900 text-white shadow-xl transition-all duration-300 hover:scale-105 hover:bg-yellow-400 active:scale-95 dark:bg-yellow-300 dark:text-[#183972] dark:hover:bg-yellow-200"
+                  className="absolute right-1 top-1/2 flex h-10 w-10 -translate-y-1/2 items-center justify-center rounded-full bg-[#183972] text-white shadow-md transition-all duration-300 hover:bg-[#f5c400] hover:text-[#183972] active:scale-95 dark:bg-yellow-300 dark:text-[#183972] dark:hover:bg-yellow-200 sm:right-1.5"
                   aria-label="Buscar eventos"
                 >
                   <svg
                     xmlns="http://www.w3.org/2000/svg"
-                    className="h-7 w-7"
+                    className="h-5 w-5 sm:h-6 sm:w-6"
                     fill="none"
                     viewBox="0 0 24 24"
                     stroke="currentColor"
-                    strokeWidth="2.2"
+                    strokeWidth="2.3"
                   >
                     <path
                       strokeLinecap="round"
@@ -226,7 +227,7 @@ export default function EventManager({
               </div>
 
               {showAdvancedFilters && (
-                <div className="mt-5 animate-[fadeIn_.35s_ease-in-out] rounded-3xl border border-gray-100 bg-gray-50/80 p-4 dark:border-slate-800 dark:bg-slate-950/70">
+                <div className="mt-5 animate-[fadeIn_.35s_ease-in-out] rounded-3xl border border-gray-100 bg-gray-50/90 p-4 dark:border-slate-800 dark:bg-slate-950/70">
                   <div className="grid gap-3 sm:grid-cols-2 lg:grid-cols-5">
                     <FilterSelect
                       label="Fecha"
@@ -325,7 +326,7 @@ export default function EventManager({
                       <button
                         type="button"
                         onClick={clearFilters}
-                        className="rounded-full border border-gray-200 bg-white px-5 py-2 text-sm font-black text-[#183972] transition hover:bg-[#183972] hover:text-white dark:border-slate-700 dark:bg-slate-900 dark:text-slate-100 dark:hover:bg-yellow-300 dark:hover:text-[#183972]"
+                        className="w-full rounded-full border border-gray-200 bg-white px-5 py-2.5 text-sm font-black text-[#183972] transition hover:bg-[#183972] hover:text-white dark:border-slate-700 dark:bg-slate-900 dark:text-slate-100 dark:hover:bg-yellow-300 dark:hover:text-[#183972] sm:w-auto"
                       >
                         Limpiar filtros
                       </button>
@@ -337,14 +338,14 @@ export default function EventManager({
           </div>
         </form>
 
-        <div className="mt-4 flex flex-col gap-2 sm:flex-row sm:items-center sm:justify-between">
+        <div className="mt-5 flex flex-col gap-2 rounded-2xl bg-white/70 px-4 py-3 text-center shadow-sm dark:bg-slate-900/60 sm:flex-row sm:items-center sm:justify-between sm:text-left">
           <p className="text-sm font-semibold text-gray-600 dark:text-slate-300">
             Mostrando {paginationStart}-{paginationEnd} de{" "}
             {filteredEvents.length} eventos.
           </p>
 
           {(filters.search || hasAdvancedFilters) && (
-            <p className="text-sm font-semibold text-gray-600 dark:text-slate-300">
+            <p className="text-sm font-black text-[#183972] dark:text-yellow-200">
               Filtros aplicados
             </p>
           )}
@@ -367,7 +368,7 @@ export default function EventManager({
         )}
 
         {!loadError && events.length === 0 && (
-          <div className="mt-8 rounded-3xl border border-dashed border-gray-300 bg-white p-10 text-center shadow-sm dark:border-slate-700 dark:bg-slate-900">
+          <div className="mt-8 rounded-3xl border border-dashed border-gray-300 bg-white p-8 text-center shadow-sm dark:border-slate-700 dark:bg-slate-900 sm:p-10">
             <h3 className="text-2xl font-black text-[#183972] dark:text-slate-100">
               No hay eventos publicados
             </h3>
@@ -380,7 +381,7 @@ export default function EventManager({
         )}
 
         {!loadError && events.length > 0 && filteredEvents.length === 0 && (
-          <div className="mt-8 rounded-3xl border border-dashed border-gray-300 bg-white p-10 text-center shadow-sm dark:border-slate-700 dark:bg-slate-900">
+          <div className="mt-8 rounded-3xl border border-dashed border-gray-300 bg-white p-8 text-center shadow-sm dark:border-slate-700 dark:bg-slate-900 sm:p-10">
             <h3 className="text-2xl font-black text-[#183972] dark:text-slate-100">
               No hay eventos con esos filtros
             </h3>
@@ -405,12 +406,12 @@ export default function EventManager({
 
             {totalPages > 1 && (
               <div className="mt-10 flex justify-center">
-                <div className="flex flex-wrap items-center justify-center gap-2">
+                <div className="flex w-full flex-wrap items-center justify-center gap-2 sm:w-auto">
                   <button
                     type="button"
                     onClick={() => goToPage(safeCurrentPage - 1)}
                     disabled={safeCurrentPage === 1}
-                    className="rounded-md border border-gray-300 px-4 py-2 text-sm font-black text-[#183972] transition hover:bg-yellow-300 disabled:cursor-not-allowed disabled:opacity-40 dark:border-slate-700 dark:text-slate-100 dark:hover:bg-slate-800"
+                    className="min-w-[7rem] rounded-full border border-gray-300 px-4 py-2 text-sm font-black text-[#183972] transition hover:bg-yellow-300 disabled:cursor-not-allowed disabled:opacity-40 dark:border-slate-700 dark:text-slate-100 dark:hover:bg-slate-800"
                   >
                     Anterior
                   </button>
@@ -439,7 +440,7 @@ export default function EventManager({
                     type="button"
                     onClick={() => goToPage(safeCurrentPage + 1)}
                     disabled={safeCurrentPage === totalPages}
-                    className="rounded-md border border-gray-300 px-4 py-2 text-sm font-black text-[#183972] transition hover:bg-yellow-300 disabled:cursor-not-allowed disabled:opacity-40 dark:border-slate-700 dark:text-slate-100 dark:hover:bg-slate-800"
+                    className="min-w-[7rem] rounded-full border border-gray-300 px-4 py-2 text-sm font-black text-[#183972] transition hover:bg-yellow-300 disabled:cursor-not-allowed disabled:opacity-40 dark:border-slate-700 dark:text-slate-100 dark:hover:bg-slate-800"
                   >
                     Siguiente
                   </button>
@@ -530,32 +531,34 @@ function EventDetailModal({
 
   return (
     <div
-      className="fixed inset-0 z-[80] flex items-center justify-center bg-black/65 px-4 py-8 backdrop-blur-sm"
+      className="fixed inset-0 z-[80] flex items-end justify-center bg-black/70 p-0 backdrop-blur-sm sm:items-center sm:p-4 md:p-8"
       onClick={onClose}
     >
       <article
-        className="max-h-[90vh] w-full max-w-3xl overflow-y-auto rounded-3xl bg-white shadow-2xl dark:bg-slate-900"
+        className="max-h-[92dvh] w-full overflow-hidden rounded-t-3xl bg-white shadow-2xl dark:bg-slate-900 sm:max-w-3xl sm:rounded-3xl"
         onClick={(event) => event.stopPropagation()}
       >
-        <div className="relative h-72 w-full overflow-hidden bg-gray-100 dark:bg-slate-800 md:h-96">
+        <div className="relative h-48 w-full overflow-hidden bg-gray-100 dark:bg-slate-800 sm:h-72 md:h-96">
           <img
             src={imageUrl}
             alt={event.title}
             className="h-full w-full object-cover"
           />
 
+          <div className="absolute inset-0 bg-gradient-to-t from-black/50 via-transparent to-black/10" />
+
           <button
             type="button"
             onClick={onClose}
-            className="absolute right-4 top-4 rounded-md bg-white px-4 py-2 text-sm font-black text-[#183972] shadow-lg transition hover:bg-[#f5c400] dark:bg-slate-900 dark:text-slate-100 dark:hover:bg-yellow-300 dark:hover:text-[#183972]"
+            className="absolute right-3 top-3 flex h-10 w-10 items-center justify-center rounded-full bg-white text-lg font-black text-[#183972] shadow-lg transition hover:bg-[#f5c400] dark:bg-slate-900 dark:text-slate-100 dark:hover:bg-yellow-300 dark:hover:text-[#183972] sm:right-4 sm:top-4"
             aria-label="Cerrar detalle"
           >
-            X
+            ×
           </button>
         </div>
 
-        <div className="p-6 md:p-8">
-          <div className="flex flex-wrap items-center gap-3">
+        <div className="max-h-[calc(92dvh-12rem)] overflow-y-auto p-4 sm:max-h-[calc(92dvh-18rem)] sm:p-6 md:max-h-[calc(92dvh-24rem)] md:p-8">
+          <div className="flex flex-wrap items-center gap-2 sm:gap-3">
             <span className="rounded-full bg-[#183972]/10 px-3 py-1 text-xs font-black uppercase text-[#183972] dark:bg-yellow-300/15 dark:text-yellow-200">
               {event.category}
             </span>
@@ -569,54 +572,45 @@ function EventDetailModal({
             </span>
           </div>
 
-          <h3 className="mt-4 text-3xl font-black text-[#183972] dark:text-slate-100">
+          <h3 className="mt-4 text-2xl font-black leading-tight text-[#183972] dark:text-slate-100 sm:text-3xl">
             {event.title}
           </h3>
 
-          <div className="mt-6 grid gap-3 text-sm text-gray-700 dark:text-slate-300 md:grid-cols-2">
-            <p className="rounded-2xl bg-gray-50 p-4 dark:bg-slate-950">
-              <strong className="block text-[#183972] dark:text-yellow-200">
-                Fecha y hora
-              </strong>
-              {formatEventDate(event.date)}
-            </p>
-
-            <p className="rounded-2xl bg-gray-50 p-4 dark:bg-slate-950">
-              <strong className="block text-[#183972] dark:text-yellow-200">
-                Lugar
-              </strong>
-              {event.location}
-            </p>
-
-            <p className="rounded-2xl bg-gray-50 p-4 dark:bg-slate-950">
-              <strong className="block text-[#183972] dark:text-yellow-200">
-                Organizador
-              </strong>
-              {event.organizer}
-            </p>
-
-            <p className="rounded-2xl bg-gray-50 p-4 dark:bg-slate-950">
-              <strong className="block text-[#183972] dark:text-yellow-200">
-                Modalidad
-              </strong>
-              {getModalityLabel(event.modality)}
-            </p>
+          <div className="mt-5 grid gap-3 text-sm text-gray-700 dark:text-slate-300 sm:grid-cols-2 md:mt-6">
+            <InfoBox label="Fecha y hora" value={formatEventDate(event.date)} />
+            <InfoBox label="Lugar" value={event.location} />
+            <InfoBox label="Organizador" value={event.organizer} />
+            <InfoBox
+              label="Modalidad"
+              value={getModalityLabel(event.modality)}
+            />
           </div>
 
-          <p className="mt-6 whitespace-pre-line text-base leading-8 text-gray-700 dark:text-slate-300">
+          <p className="mt-5 whitespace-pre-line text-sm leading-7 text-gray-700 dark:text-slate-300 sm:mt-6 sm:text-base sm:leading-8">
             {event.description}
           </p>
 
           <button
             type="button"
             onClick={onClose}
-            className="mt-8 rounded-md bg-[#183972] px-6 py-3 text-sm font-black text-white transition hover:bg-[#f5c400] hover:text-[#183972] active:bg-[#f5c400] active:text-[#183972] dark:bg-yellow-300 dark:text-[#183972] dark:hover:bg-yellow-200"
+            className="mt-7 w-full rounded-xl bg-[#183972] px-6 py-3 text-sm font-black text-white transition hover:bg-[#f5c400] hover:text-[#183972] active:bg-[#f5c400] active:text-[#183972] dark:bg-yellow-300 dark:text-[#183972] dark:hover:bg-yellow-200 sm:w-auto"
           >
             Cerrar detalle
           </button>
         </div>
       </article>
     </div>
+  );
+}
+
+function InfoBox({ label, value }: { label: string; value: string }) {
+  return (
+    <p className="rounded-2xl bg-gray-50 p-4 dark:bg-slate-950">
+      <strong className="mb-1 block text-[#183972] dark:text-yellow-200">
+        {label}
+      </strong>
+      <span className="break-words">{value}</span>
+    </p>
   );
 }
 

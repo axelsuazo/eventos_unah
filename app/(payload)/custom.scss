@@ -1,17 +1,24 @@
-/* Estilos seguros para Payload CMS Admin */
-/* No usar @import de @payloadcms/ui/scss porque rompe con Next/Turbopack */
+/* =========================================================
+   Payload Admin UI - Estilo institucional UNAH
+   Ruta: app/(payload)/custom.scss
+   Este archivo es el que realmente se importa en app/(payload)/layout.tsx
+   ========================================================= */
 
-/* Colores institucionales */
 :root {
   --unah-blue: #183972;
-  --unah-red: #8c0327;
+  --unah-blue-dark: #0f2550;
+  --unah-blue-soft: #eef4ff;
   --unah-yellow: #f5c400;
-  --unah-bg: #f8fafc;
+  --unah-yellow-soft: #fff7cc;
+  --unah-red: #8c0327;
+  --unah-white: #ffffff;
+  --unah-gray: #f8fafc;
+  --unah-border: #dbe5f3;
 }
 
-/* ========================= */
-/* Variables visuales Payload */
-/* ========================= */
+/* =========================
+   Tema claro
+   ========================= */
 
 html[data-theme="light"] {
   --theme-bg: #f8fafc;
@@ -19,190 +26,352 @@ html[data-theme="light"] {
 
   --theme-elevation-0: #ffffff;
   --theme-elevation-50: #f9fafb;
-  --theme-elevation-100: #f3f4f6;
-  --theme-elevation-150: #e5e7eb;
-  --theme-elevation-200: #d1d5db;
+  --theme-elevation-100: #edf2f7;
+  --theme-elevation-150: #dbe5f3;
+  --theme-elevation-200: #c7d2e5;
+  --theme-elevation-300: #9fb1cc;
+  --theme-elevation-400: #64748b;
+  --theme-elevation-500: #475569;
+  --theme-elevation-600: #334155;
+  --theme-elevation-700: #1f2937;
+  --theme-elevation-800: #183972;
+  --theme-elevation-900: #0f2550;
+  --theme-elevation-950: #071225;
 
   --theme-success-500: #16a34a;
   --theme-error-500: #dc2626;
-  --theme-warning-500: #f59e0b;
+  --theme-warning-500: #f5c400;
 }
 
+/* =========================
+   Tema oscuro
+   ========================= */
+
 html[data-theme="dark"] {
-  --theme-bg: #1F3A69;
+  --theme-bg: #020617;
   --theme-text: #f8fafc;
 
   --theme-elevation-0: #0f172a;
   --theme-elevation-50: #111827;
-  --theme-elevation-100: #0062ff;
-  --theme-elevation-150: #334155;
-  --theme-elevation-200: #475569;
+  --theme-elevation-100: #1e293b;
+  --theme-elevation-150: #273449;
+  --theme-elevation-200: #334155;
+  --theme-elevation-300: #475569;
+  --theme-elevation-400: #94a3b8;
+  --theme-elevation-500: #cbd5e1;
+  --theme-elevation-600: #e2e8f0;
+  --theme-elevation-700: #f1f5f9;
+  --theme-elevation-800: #f8fafc;
+  --theme-elevation-900: #ffffff;
+  --theme-elevation-950: #ffffff;
 
   --theme-success-500: #22c55e;
   --theme-error-500: #ef4444;
-  --theme-warning-500: #facc15;
+  --theme-warning-500: #f5c400;
 }
 
-/* ========================= */
-/* Sidebar / navegación      */
-/* ========================= */
+/* =========================
+   Estructura general
+   ========================= */
 
-.nav {
-  background-color: var(--unah-blue);
-}
-
-html[data-theme="dark"] .nav {
-  background-color: #13689E;
-}
-
-.nav a,
-.nav button {
-  transition:
-    color 0.2s ease,
-    background-color 0.2s ease;
-}
-
-.nav a:hover,
-.nav button:hover {
-  color: var(--unah-yellow);
-}
-
-/* ========================= */
-/* Botones                   */
-/* ========================= */
-
-.btn--style-primary {
-  background-color: var(--unah-blue);
-  border-color: var(--unah-blue);
-  color: #ffffff;
-  border-radius: 999px;
-  font-weight: 700;
-}
-
-.btn--style-primary:hover {
-  background-color: var(--unah-yellow);
-  border-color: var(--unah-yellow);
-  color: var(--unah-blue);
-}
-
-html[data-theme="dark"] .btn--style-primary {
-  background-color: var(--unah-yellow);
-  border-color: var(--unah-yellow);
-  color: var(--unah-blue);
-}
-
-html[data-theme="dark"] .btn--style-primary:hover {
-  background-color: #ffe066;
-  border-color: #ffe066;
-  color: var(--unah-blue);
-}
-
-/* Botones secundarios sin alterar tamaño */
-.btn--style-secondary {
-  border-radius: 999px;
-  font-weight: 700;
-}
-
-/* ========================= */
-/* Enlaces                   */
-/* ========================= */
-
-a {
-  transition: color 0.2s ease;
-}
-
-a:hover {
-  color: var(--unah-red);
-}
-
-html[data-theme="dark"] a:hover {
-  color: var(--unah-yellow);
-}
-
-/* ========================= */
-/* Dashboard                 */
-/* ========================= */
-
-.dashboard {
+.template-default {
   background:
-    radial-gradient(circle at top left, rgba(255, 255, 255, 0.14), transparent 32%),
+    radial-gradient(circle at top left, rgba(24, 57, 114, 0.13), transparent 34%),
     var(--theme-bg);
 }
 
-.dashboard__label,
-.dashboard__card-label {
-  color: var(--unah-blue);
+.template-default__wrap,
+.template-default__main,
+.dashboard,
+.collection-edit,
+.doc-controls,
+.doc-header,
+.collection-list,
+.list-header {
+  background-color: transparent;
 }
 
-html[data-theme="dark"] .dashboard__label,
-html[data-theme="dark"] .dashboard__card-label {
-  color: var(--unah-yellow);
+/* =========================
+   Barra lateral / navegación
+   ========================= */
+
+.nav {
+  background:
+    linear-gradient(180deg, var(--unah-blue) 0%, var(--unah-blue-dark) 100%) !important;
+  border-right: 1px solid rgba(255, 255, 255, 0.1) !important;
+  color: #ffffff !important;
 }
 
-/* ========================= */
-/* Badges / estados          */
-/* ========================= */
-
-.pill {
-  border-radius: 999px;
+html[data-theme="dark"] .nav {
+  background:
+    linear-gradient(180deg, #071225 0%, #0f172a 55%, #183972 100%) !important;
 }
 
-/* ========================= */
-/* Tablas / listas           */
-/* ========================= */
-
-.collection-list {
-  border-radius: 16px;
-  overflow: hidden;
+.nav a,
+.nav button,
+.nav .nav__label,
+.nav .nav__link,
+.nav .nav-group__toggle {
+  color: rgba(255, 255, 255, 0.88) !important;
 }
 
-.table {
-  border-radius: 16px;
-  overflow: hidden;
+.nav .nav__link,
+.nav .nav-group__toggle {
+  border-radius: 14px;
+  padding: 8px 12px !important;
+  transition:
+    background-color 0.2s ease,
+    color 0.2s ease,
+    transform 0.2s ease;
 }
 
-/* ========================= */
-/* Evitar cambios agresivos  */
-/* ========================= */
+.nav .nav__link:hover,
+.nav .nav__link:focus-visible,
+.nav .nav-group__toggle:hover,
+.nav .nav-group__toggle:focus-visible {
+  background-color: rgba(245, 196, 0, 0.13) !important;
+  color: var(--unah-yellow) !important;
+  text-decoration: none !important;
+  transform: translateX(2px);
+}
 
-/*
-No tocar:
-- input
-- textarea
-- select
-- body
-- *
-- h1, h2, h3 globales
-- .field-type
-- .render-fields
-- .card
+.nav .nav__link.active,
+.nav .nav__link:has(.nav__link-indicator) {
+  background-color: rgba(245, 196, 0, 0.18) !important;
+  color: #ffffff !important;
+  font-weight: 800 !important;
+}
 
-Payload ya maneja esos tamaños internamente.
-*/
-/* ========================= */
-/* Color visual de Payload   */
-/* ========================= */
+.nav__link-indicator {
+  background: var(--unah-yellow) !important;
+}
+
+.nav__controls {
+  width: 100%;
+  border-top: 1px solid rgba(255, 255, 255, 0.16);
+  padding-top: 16px;
+}
+
+/* =========================
+   Logo y cabecera
+   ========================= */
 
 .payload-logo,
 .template-default .nav__brand,
 .template-default .nav__brand a,
 .template-default .nav__brand svg,
 .template-default .nav__brand path {
-  color: var(--unah-yellow);
-  fill: var(--unah-yellow);
+  color: var(--unah-yellow) !important;
+  fill: var(--unah-yellow) !important;
 }
 
-html[data-theme="light"] .payload-logo,
-html[data-theme="light"] .template-default .nav__brand,
-html[data-theme="light"] .template-default .nav__brand a,
-html[data-theme="light"] .template-default .nav__brand svg,
-html[data-theme="light"] .template-default .nav__brand path {
-  color: var(--unah-blue);
-  fill: var(--unah-blue);
+.app-header,
+.doc-header,
+.collection-list__header,
+.list-header {
+  border-bottom-color: var(--unah-border) !important;
 }
 
 .doc-header,
 .collection-list__header,
 .list-header {
-  border-top: 4px solid var(--unah-yellow);
+  border-top: 4px solid var(--unah-yellow) !important;
+}
+
+/* =========================
+   Cards, listas y tablas
+   ========================= */
+
+.card,
+.collection-list,
+.table,
+.doc-controls,
+.list-header,
+.doc-header,
+.render-fields {
+  border-radius: 18px !important;
+}
+
+.collection-list,
+.table {
+  overflow: hidden;
+  border: 1px solid var(--unah-border) !important;
+  box-shadow: 0 14px 35px rgba(15, 23, 42, 0.06);
+}
+
+html[data-theme="dark"] .collection-list,
+html[data-theme="dark"] .table {
+  border-color: rgba(245, 196, 0, 0.16) !important;
+  box-shadow: 0 14px 35px rgba(0, 0, 0, 0.22);
+}
+
+.table thead,
+.collection-list__header,
+.list-header {
+  background-color: rgba(24, 57, 114, 0.05) !important;
+}
+
+html[data-theme="dark"] .table thead,
+html[data-theme="dark"] .collection-list__header,
+html[data-theme="dark"] .list-header {
+  background-color: rgba(245, 196, 0, 0.08) !important;
+}
+
+/* =========================
+   Botones
+   ========================= */
+
+.btn,
+.btn--style-primary,
+.btn--style-secondary,
+.btn--style-pill,
+.btn--style-subtle {
+  border-radius: 999px !important;
+  font-weight: 800 !important;
+}
+
+.btn--style-primary {
+  background-color: var(--unah-blue) !important;
+  border-color: var(--unah-blue) !important;
+  color: #ffffff !important;
+}
+
+.btn--style-primary:hover,
+.btn--style-primary:focus-visible {
+  background-color: var(--unah-yellow) !important;
+  border-color: var(--unah-yellow) !important;
+  color: var(--unah-blue) !important;
+}
+
+html[data-theme="dark"] .btn--style-primary {
+  background-color: var(--unah-yellow) !important;
+  border-color: var(--unah-yellow) !important;
+  color: var(--unah-blue) !important;
+}
+
+html[data-theme="dark"] .btn--style-primary:hover,
+html[data-theme="dark"] .btn--style-primary:focus-visible {
+  background-color: #ffe066 !important;
+  border-color: #ffe066 !important;
+  color: var(--unah-blue) !important;
+}
+
+.btn--style-secondary {
+  border-color: var(--unah-blue) !important;
+  color: var(--unah-blue) !important;
+}
+
+html[data-theme="dark"] .btn--style-secondary {
+  border-color: rgba(245, 196, 0, 0.55) !important;
+  color: var(--unah-yellow) !important;
+}
+
+/* =========================
+   Inputs y foco accesible
+   ========================= */
+
+input:focus,
+textarea:focus,
+select:focus,
+button:focus-visible,
+a:focus-visible {
+  outline: 3px solid rgba(245, 196, 0, 0.4) !important;
+  outline-offset: 2px !important;
+}
+
+/* =========================
+   Badges / estados
+   ========================= */
+
+.pill {
+  border-radius: 999px !important;
+  font-weight: 800 !important;
+}
+
+/* =========================
+   Botón de cerrar sesión
+   ========================= */
+
+.nav__log-out {
+  border-radius: 999px !important;
+  color: #ffffff !important;
+  font-weight: 900 !important;
+  text-decoration: none !important;
+}
+
+.nav__log-out:hover,
+.nav__log-out:focus-visible {
+  background-color: var(--unah-red) !important;
+  color: #ffffff !important;
+  text-decoration: none !important;
+}
+
+/* =========================
+   Versión móvil del admin
+   ========================= */
+
+@media (max-width: 768px) {
+  .nav {
+    background:
+      linear-gradient(180deg, var(--unah-blue) 0%, #071225 100%) !important;
+  }
+
+  .nav__scroll {
+    padding-bottom: 22px !important;
+  }
+
+  .nav__link,
+  .nav-group__toggle {
+    width: 100%;
+    min-height: 44px;
+    align-items: center;
+    font-size: 16px !important;
+  }
+
+  .nav__controls {
+    margin-top: 20px !important;
+    gap: 12px !important;
+  }
+
+  .nav__log-out {
+    display: flex !important;
+    width: 100% !important;
+    min-height: 48px !important;
+    align-items: center !important;
+    justify-content: center !important;
+    gap: 8px !important;
+    margin-top: 12px !important;
+    padding: 12px 16px !important;
+    border: 1px solid rgba(255, 255, 255, 0.24) !important;
+    background-color: var(--unah-red) !important;
+    color: #ffffff !important;
+    box-shadow: 0 12px 30px rgba(140, 3, 39, 0.28) !important;
+  }
+
+  .nav__log-out::after {
+    content: "Cerrar sesión";
+    font-size: 14px;
+    font-weight: 900;
+  }
+
+  .doc-header,
+  .collection-list__header,
+  .list-header,
+  .render-fields,
+  .doc-controls,
+  .collection-list {
+    border-radius: 14px !important;
+  }
+
+  .doc-header,
+  .collection-list__header,
+  .list-header {
+    padding-inline: 14px !important;
+  }
+
+  .btn,
+  .btn--style-primary,
+  .btn--style-secondary {
+    min-height: 42px;
+  }
 }

@@ -22,3 +22,20 @@
 .btn--style-primary {
   font-weight: 800 !important;
 }
+
+/* Mejoras para la versión móvil del Admin UI */
+@media (max-width: 768px) {
+  /* Botón de cerrar sesión prominente en el menú lateral */
+  .nav .nav__log-out {
+    background-color: #8c0327 !important; /* Rojo UNAH */
+    color: white !important;
+    margin: 15px !important;
+    padding: 12px !important;
+    border-radius: 8px !important;
+    text-align: center !important;
+    display: block !important;
+    font-weight: bold !important;
+    text-decoration: none !important;
+    border: none !important;
+  }
+}
