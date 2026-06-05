@@ -111,14 +111,22 @@ export async function getEventsResult(): Promise<EventsLoadResult> {
     if (!response.ok) {
       const errorText = await response.text().catch(() => "");
 
+      let errorMessage = `Payload respondió con error ${response.status}: ${errorText || response.statusText}`;
+
+      // Detectar si el error proviene de la protección de Vercel
+      if (response.status === 401 && errorText.includes("Vercel Authentication")) {
+        if (!vercelBypassToken) {
+          errorMessage = "La protección de despliegue de Vercel está activa y NO se encontró la variable VERCEL_AUTOMATION_BYPASS_TOKEN en el frontend.";
+        } else {
+          errorMessage = "La protección de despliegue de Vercel rechazó el token. Verifica que el VERCEL_AUTOMATION_BYPASS_TOKEN coincida exactamente con el del panel del Backend.";
+        }
+      } else if (response.status === 404) {
+        errorMessage = "No se encontró el endpoint /api/public/events. Verifica que la ruta exista en el backend.";
+      }
+
       return {
         events: [],
-        error:
-          response.status === 404
-            ? "No se encontró el endpoint /api/public/events. Verifica que la ruta exista en el backend."
-            : `Payload respondió con error ${response.status}: ${
-                errorText || response.statusText
-              }`,
+        error: errorMessage,
       };
     }
 
