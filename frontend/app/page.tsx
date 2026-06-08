@@ -1,16 +1,11 @@
-import HomeClient from "@/app/Components/HomeClient";
-import {
-  getEventsResult,
-} from "@/features/events/api";
+import EventManager from "./Components/EventManager";
+import { getEventsResult } from "@/features/events/api";
 
 export default async function HomePage() {
-  const {
-    events,
-    error,
-  } = await getEventsResult();
+  const { events, error } = await getEventsResult();
 
   return (
-    <HomeClient
+    <EventManager
       initialEvents={events}
       initialLoadError={error}
     />
