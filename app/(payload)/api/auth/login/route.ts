@@ -1,141 +1,238 @@
-import config from '@payload-config'
-import { getPayload } from 'payload'
+import config from "@payload-config";
+import { getPayload } from "payload";
+import {
+  NextRequest,
+  NextResponse,
+} from "next/server";
 
-import { signApiToken } from '@/lib/auth/jwt'
+import { verifyJwtRequest } from "@/lib/auth/jwt";
 
-type LoginBody = {
-  email?: unknown
-  password?: unknown
-}
+const PLACEHOLDER_IMAGE_URL =
+  "/eventos/placeholder-evento.svg";
 
-type AuthenticatedUser = {
-  id?: string | number
-  email?: string
-  role?: string
-}
+export const dynamic = "force-dynamic";
+export const revalidate = 0;
 
-function normalizeCredential(value: unknown) {
-  return typeof value === 'string' ? value.trim() : ''
-}
+type RelatedCategory =
+  | string
+  | number
+  | {
+      id?: string | number;
+      name?: string;
+      title?: string;
+      slug?: string;
+    }
+  | null
+  | undefined;
 
-export async function POST(request: Request) {
-  let body: LoginBody
+type RelatedImage =
+  | string
+  | number
+  | {
+      id?: string | number;
+      url?: string;
+      alt?: string;
+      filename?: string;
+    }
+  | null
+  | undefined;
 
-  try {
-    body = (await request.json()) as LoginBody
-  } catch {
-    return Response.json(
-      {
-        error: 'INVALID_BODY',
-        message: 'El body debe enviarse en formato JSON.',
-      },
-      { status: 400 },
-    )
+type PayloadEventDocument = {
+  id?: string | number;
+  title?: string;
+  description?: string;
+  date?: string;
+  endDate?: string;
+  location?: string;
+  category?: RelatedCategory;
+  organizer?: string;
+  modality?: string;
+  published?: boolean;
+  image?: RelatedImage;
+};
+
+function getCategoryLabel(
+  category: RelatedCategory
+) {
+  if (!category) {
+    return "General";
   }
 
-  // No aplicar trim ni lowercase a la contraseña, ya que los espacios y mayúsculas son válidos.
-  const email = normalizeCredential(body.email).toLowerCase().trim()
-  const password = typeof body.password === 'string' ? body.password : ''
-
-  if (!email || !password) {
-    return Response.json(
-      {
-        error: 'MISSING_CREDENTIALS',
-        message: 'Debe enviar email y password.',
-      },
-      { status: 400 },
-    )
+  if (
+    typeof category === "string" ||
+    typeof category === "number"
+  ) {
+    return String(category);
   }
 
+  return (
+    category.name ||
+    category.title ||
+    category.slug ||
+    "General"
+  );
+}
+
+function getPublicImage(
+  image: RelatedImage,
+  title: string
+) {
+  if (
+    !image ||
+    typeof image === "string" ||
+    typeof image === "number"
+  ) {
+    return {
+      url: PLACEHOLDER_IMAGE_URL,
+      alt: `Imagen genérica para ${title}`,
+    };
+  }
+
+  const url =
+    image.url ||
+    (
+      image.filename
+        ? `/api/media/file/${image.filename}`
+        : ""
+    );
+
+  if (!url) {
+    return {
+      url: PLACEHOLDER_IMAGE_URL,
+      alt: `Imagen genérica para ${title}`,
+    };
+  }
+
+  return {
+    url,
+    alt: image.alt || title,
+    filename: image.filename || "",
+  };
+}
+
+function toPublicEvent(
+  event: PayloadEventDocument
+) {
+  const title =
+    event.title || "Evento sin título";
+
+  return {
+    id: String(event.id || ""),
+    title,
+    description:
+      event.description ||
+      "Sin descripción disponible.",
+    date: event.date || "",
+    endDate: event.endDate || "",
+    location: event.location || "UNAH",
+    category: getCategoryLabel(event.category),
+    organizer: event.organizer || "UNAH",
+    modality: event.modality || "presencial",
+    published: event.published ?? true,
+    image: getPublicImage(
+      event.image,
+      title
+    ),
+  };
+}
+
+function sortEvents(
+  events: ReturnType<typeof toPublicEvent>[]
+) {
+  const now = new Date();
+
+  return events.sort((a, b) => {
+    const dateA =
+      new Date(a.date).getTime();
+
+    const dateB =
+      new Date(b.date).getTime();
+
+    const safeDateA =
+      Number.isNaN(dateA) ? 0 : dateA;
+
+    const safeDateB =
+      Number.isNaN(dateB) ? 0 : dateB;
+
+    const aIsPast =
+      safeDateA < now.getTime();
+
+    const bIsPast =
+      safeDateB < now.getTime();
+
+    if (aIsPast !== bIsPast) {
+      return aIsPast ? 1 : -1;
+    }
+
+    return safeDateA - safeDateB;
+  });
+}
+
+export async function GET(
+  request: NextRequest
+) {
   try {
-    console.log(`[Login Attempt]: Iniciando proceso para ${email}`)
-    
-    const payload = await getPayload({ config })
+    const verification =
+      await verifyJwtRequest(request);
 
-    // Verificación de seguridad: ¿Hay algún usuario en el sistema?
-    const userCount = await payload.count({ collection: 'users' })
-    if (userCount.totalDocs === 0) {
-      console.error(`[Login Error]: No hay usuarios registrados. Vaya a /admin para crear el primero.`)
-      return Response.json(
-        { error: 'NO_USERS_EXIST', message: 'No existen usuarios en el CMS. Cree uno en /admin.' },
-        { status: 401 }
-      )
+    if (!verification.ok) {
+      return verification.response;
     }
 
-    // Verificación adicional para debugging: ¿Existe el usuario?
-    const findUser = await payload.find({
-      collection: 'users',
-      where: { email: { equals: email } },
-    })
+    const payload =
+      await getPayload({ config });
 
-    if (findUser.totalDocs === 0) {
-      console.error(`[Login Error]: El usuario ${email} NO existe en la base de datos.`)
-      return Response.json(
-        {
-          error: 'USER_NOT_FOUND',
-          message: `El usuario ${email} no existe en el CMS. Vaya a /admin y créelo.`,
+    const result = await payload.find({
+      collection: "events",
+      depth: 1,
+      limit: 100,
+      sort: "date",
+      where: {
+        published: {
+          equals: true,
         },
-        { status: 401 },
-      )
-    }
-
-    const result = await payload.login({
-      collection: 'users',
-      data: {
-        email,
-        password,
       },
-    })
+    });
 
-    
-    const user = result.user as unknown as AuthenticatedUser
+    const docs = sortEvents(
+      (
+        result.docs as PayloadEventDocument[]
+      ).map(toPublicEvent)
+    );
 
-    if (!user || !user.id || !user.email) {
-      console.warn(`[Login Failed]: Payload no devolvió datos de usuario válidos para ${email}`)
-      return Response.json(
-        {
-          error: 'INVALID_CREDENTIALS',
-          message: 'Credenciales inválidas.',
-        },
-        { status: 401 },
-      )
-    }
-
-    const token = await signApiToken({
-      sub: String(user.id),
-      email: user.email,
-      role: user.role || 'viewer',
-    })
-
-    return Response.json({
-      token,
-      tokenType: 'Bearer',
-      expiresIn: '2h',
-      user: {
-        id: String(user.id),
-        email: user.email,
-        role: user.role || 'viewer',
-      },
-    })
+    return NextResponse.json({
+      docs,
+      totalDocs: docs.length,
+      limit: result.limit,
+      totalPages: result.totalPages,
+      page: result.page,
+      pagingCounter:
+        result.pagingCounter,
+      hasPrevPage:
+        result.hasPrevPage,
+      hasNextPage:
+        result.hasNextPage,
+      prevPage:
+        result.prevPage ?? null,
+      nextPage:
+        result.nextPage ?? null,
+    });
   } catch (error) {
-    if (error instanceof Error && error.name === 'AuthenticationError') {
-      console.error(`[Login Error]: Credenciales inválidas o usuario inexistente: ${email}`)
-      return Response.json(
-        {
-          error: 'INVALID_CREDENTIALS',
-          message: 'Credenciales inválidas.',
-        },
-        { status: 401 },
-      )
-    } else {
-      console.error('[Login Error]: Error inesperado durante el login:', error)
-      return Response.json(
-        {
-          error: 'SERVER_ERROR',
-          message: 'Error interno del servidor. No se pudo establecer conexión con la base de datos.',
-        },
-        { status: 500 },
-      )
-    }
+    console.error(
+      "[API public/events]:",
+      error
+    );
+
+    return NextResponse.json(
+      {
+        error:
+          "INTERNAL_SERVER_ERROR",
+        message:
+          "No se pudieron cargar los eventos.",
+      },
+      {
+        status: 500,
+      }
+    );
   }
 }

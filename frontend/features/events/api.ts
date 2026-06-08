@@ -24,11 +24,11 @@ type PayloadEvent = {
 };
 
 function getCmsUrl() {
-  const rawUrl = process.env.CMS_URL || process.env.NEXT_PUBLIC_CMS_URL;
+  const rawUrl = process.env.CMS_URL;
 
   if (!rawUrl) {
     throw new Error(
-      "Falta CMS_URL o NEXT_PUBLIC_CMS_URL en las variables de entorno del frontend."
+      "Falta CMS_URL en las variables de entorno del frontend."
     );
   }
 
@@ -36,13 +36,13 @@ function getCmsUrl() {
 
   if (!url.startsWith("http://") && !url.startsWith("https://")) {
     throw new Error(
-      "CMS_URL debe iniciar con http:// o https://. Revisa las variables de entorno del frontend."
+      "CMS_URL debe iniciar con http:// o https://."
     );
   }
 
   if (process.env.NODE_ENV === "production" && url.includes("localhost")) {
     throw new Error(
-      "CMS_URL apunta a localhost en producción. Debe apuntar al backend desplegado en Vercel."
+      "CMS_URL apunta a localhost en producción. Debe apuntar al backend desplegado."
     );
   }
 
@@ -50,21 +50,58 @@ function getCmsUrl() {
 }
 
 function getApiToken() {
-  const token = process.env.CMS_STATIC_API_TOKEN || process.env.CMS_API_TOKEN;
+  const token = process.env.CMS_STATIC_API_TOKEN?.trim();
 
   if (!token) {
     throw new Error(
-      "Falta CMS_STATIC_API_TOKEN o CMS_API_TOKEN en las variables de entorno del frontend."
+      "Falta CMS_STATIC_API_TOKEN en las variables de entorno del frontend."
     );
   }
 
-  return token.trim();
+  return token;
 }
 
 function getErrorMessage(error: unknown) {
+  if (error instanceof Error && error.name === "TimeoutError") {
+    return "La conexión con Payload CMS excedió el tiempo máximo de espera.";
+  }
+
   return error instanceof Error
     ? error.message
     : "No se pudo conectar con Payload CMS.";
+}
+
+async function readResponseError(response: Response) {
+  const contentType = response.headers.get("content-type") || "";
+
+  if (contentType.includes("application/json")) {
+    const data = (await response.json().catch(() => null)) as
+      | {
+          message?: string;
+          error?: string;
+        }
+      | null;
+
+    return data?.message || data?.error || response.statusText;
+  }
+
+  const text = await response.text().catch(() => "");
+
+  if (
+    response.status === 401 &&
+    (
+      text.includes("Authentication Required") ||
+      text.includes("Vercel Authentication")
+    )
+  ) {
+    return (
+      "El dominio configurado en CMS_URL está protegido por Vercel. " +
+      "Use el dominio de producción público del backend o configure " +
+      "VERCEL_AUTOMATION_BYPASS_SECRET."
+    );
+  }
+
+  return text.slice(0, 500) || response.statusText;
 }
 
 function mapPayloadEvent(event: PayloadEvent): EventItem {
@@ -87,8 +124,9 @@ export async function getEventsResult(): Promise<EventsLoadResult> {
   try {
     const cmsUrl = getCmsUrl();
     const token = getApiToken();
-    // Token de bypass de Vercel para saltar la protección de despliegue
-    const vercelBypassToken = process.env.VERCEL_AUTOMATION_BYPASS_TOKEN;
+
+    const vercelBypassSecret =
+      process.env.VERCEL_AUTOMATION_BYPASS_SECRET?.trim();
 
     const url = new URL("/api/public/events", cmsUrl);
 
@@ -97,40 +135,30 @@ export async function getEventsResult(): Promise<EventsLoadResult> {
       Authorization: `Bearer ${token}`,
     };
 
-    // Si el token de bypass existe, se añade la cabecera requerida por Vercel
-    if (vercelBypassToken) {
-      headers["x-vercel-protection-bypass"] = vercelBypassToken;
+    if (vercelBypassSecret) {
+      headers["x-vercel-protection-bypass"] =
+        vercelBypassSecret;
     }
 
     const response = await fetch(url.toString(), {
       method: "GET",
       headers,
       cache: "no-store",
+      signal: AbortSignal.timeout(15_000),
     });
 
     if (!response.ok) {
-      const errorText = await response.text().catch(() => "");
-
-      let errorMessage = `Payload respondió con error ${response.status}: ${errorText || response.statusText}`;
-
-      // Detectar si el error proviene de la protección de Vercel
-      if (response.status === 401 && errorText.includes("Vercel Authentication")) {
-        if (!vercelBypassToken) {
-          errorMessage = "La protección de despliegue de Vercel está activa y NO se encontró la variable VERCEL_AUTOMATION_BYPASS_TOKEN en el frontend.";
-        } else {
-          errorMessage = "La protección de despliegue de Vercel rechazó el token. Verifica que el VERCEL_AUTOMATION_BYPASS_TOKEN coincida exactamente con el del panel del Backend.";
-        }
-      } else if (response.status === 404) {
-        errorMessage = "No se encontró el endpoint /api/public/events. Verifica que la ruta exista en el backend.";
-      }
+      const responseError = await readResponseError(response);
 
       return {
         events: [],
-        error: errorMessage,
+        error: `Payload respondió con error ${response.status}: ${responseError}`,
       };
     }
 
-    const data = (await response.json()) as PayloadListResponse<PayloadEvent>;
+    const data =
+      (await response.json()) as PayloadListResponse<PayloadEvent>;
+
     const events = (data.docs || []).map(mapPayloadEvent);
 
     return {
@@ -147,5 +175,6 @@ export async function getEventsResult(): Promise<EventsLoadResult> {
 
 export async function getEvents(): Promise<EventItem[]> {
   const result = await getEventsResult();
+
   return result.events;
 }

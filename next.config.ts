@@ -1,23 +1,35 @@
 import path from "path";
-import type { NextConfig } from "next";
-import { withPayload } from "@payloadcms/next/withPayload";
+import type {
+  NextConfig,
+} from "next";
+
+import {
+  withPayload,
+} from "@payloadcms/next/withPayload";
 
 const nextConfig: NextConfig = {
-  experimental: {
-    turbo: {
-      resolveAlias: {
-        "@payload-config": "./payload.config.ts",
-      },
+  turbopack: {
+    resolveAlias: {
+      "@payload-config":
+        "./payload.config.ts",
     },
-  } as any,
+  },
+
   webpack: (config) => {
     config.resolve.alias = {
       ...config.resolve.alias,
-      "@payload-config": path.resolve(process.cwd(), "payload.config.ts"),
+
+      "@payload-config":
+        path.resolve(
+          process.cwd(),
+          "payload.config.ts"
+        ),
     };
 
     return config;
   },
 };
 
-export default withPayload(nextConfig);
+export default withPayload(
+  nextConfig
+);
