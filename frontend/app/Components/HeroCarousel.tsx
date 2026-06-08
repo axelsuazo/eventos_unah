@@ -174,37 +174,7 @@ export default function HeroCarousel({ slides }: HeroCarouselProps) {
           )}
         </div>
 
-        <div className="relative">
-          {safeSlides.length > 1 && (
-            <div className="mt-5 grid grid-cols-4 gap-3 top-50 absolute -translate-y-1/2">
-              {safeSlides.slice(0, 4).map((slide, index) => (
-                <button
-                  key={`thumb-${slide.id}`}
-                  type="button"
-                  onClick={() => goToSlide(index)}
-                  className={`group relative h-20 overflow-hidden rounded-xl border transition-all duration-300 ${
-                    index === activeIndex
-                      ? "border-[#f5c400] ring-4 ring-[#f5c400]/25"
-                      : "border-white/20 opacity-75 hover:opacity-100"
-                  }`}
-                  aria-label={`Seleccionar ${slide.title}`}
-                >
-                  <img
-                    src={slide.image}
-                    alt={slide.imageAlt}
-                    className="h-full w-full object-cover transition duration-500 group-hover:scale-110"
-                  />
-
-                  <div className="absolute inset-0 bg-black/25" />
-
-                  {index === activeIndex && (
-                    <div className="absolute bottom-0 left-0 h-1 w-full bg-[#f5c400]" />
-                  )}
-                </button>
-              ))}
-            </div>
-          )}
-        </div>
+      
       </div>
     </section>
   );
