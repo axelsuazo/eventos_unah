@@ -188,7 +188,7 @@ export default function EventManager({
           </p>
 
           <h2 className="mt-3 text-3xl font-black leading-tight text-[#183972] dark:text-slate-100 sm:text-4xl md:text-5xl">
-            Eventos disponibles
+            Eventos disponibles para toda la comunidad UNAH
           </h2>
         </div>
 
