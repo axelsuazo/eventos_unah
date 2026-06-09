@@ -5,13 +5,10 @@
   "scripts": {
     "dev": "next dev -p 3001",
     "dev:cms": "next dev -p 3001",
-    "dev:frontend": "npm --prefix frontend run dev",
     "build": "next build",
     "build:cms": "next build",
-    "build:frontend": "npm --prefix frontend run build",
     "start": "next start -p 3001",
     "start:cms": "next start -p 3001",
-    "start:frontend": "npm --prefix frontend run start",
     "lint": "eslint",
     "payload": "payload",
     "generate:types": "payload generate:types",
