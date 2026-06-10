@@ -78,7 +78,7 @@ export default function HeroCarousel({ slides }: HeroCarouselProps) {
   return (
     <section
       id="inicio"
-      className="relative isolate overflow-hidden bg-[#183972] px-6 py-20 text-white dark:bg-slate-950 md:py-24"
+      className="relative isolate flex min-h-[600px] items-center overflow-hidden bg-[#183972] px-6 py-12 text-white dark:bg-slate-950 md:min-h-[700px] md:py-24"
     >
       <div className="absolute inset-0 -z-20">
         {safeSlides.map((slide, index) => (
@@ -103,7 +103,7 @@ export default function HeroCarousel({ slides }: HeroCarouselProps) {
           <h1
             key={`title-${activeSlide.id}`}
             title={activeSlide.title}
-            className="mt-6 max-w-3xl text-4xl font-extrabold leading-tight md:text-6xl animate-[heroFade_.65s_ease-in-out] overflow-hidden"
+            className="mt-6 min-h-[3em] max-w-3xl text-4xl font-extrabold leading-tight animate-[heroFade_.65s_ease-in-out] overflow-hidden md:min-h-[2.5em] md:text-6xl"
           >
             {limitText(activeSlide.title, 45)}
           </h1>
@@ -111,7 +111,7 @@ export default function HeroCarousel({ slides }: HeroCarouselProps) {
           <p
             key={`description-${activeSlide.id}`}
             title={activeSlide.description}
-            className="mt-5 max-w-2xl text-base leading-7 text-blue-50 md:text-lg animate-[heroFade_.75s_ease-in-out] overflow-hidden"
+            className="mt-5 min-h-[6em] max-w-2xl text-base leading-7 text-blue-50 animate-[heroFade_.75s_ease-in-out] overflow-hidden md:min-h-[5em] md:text-lg"
           >
             {limitText(activeSlide.description, 150)}
           </p>
