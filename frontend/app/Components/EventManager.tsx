@@ -88,40 +88,38 @@ export default function EventManager({
   const filteredEvents = useMemo(() => {
     const normalizedSearch = normalizeText(filters.search);
 
-    return events.filter((event) => {
-      const matchesSearch =
-        !normalizedSearch ||
-        normalizeText(event.title).includes(normalizedSearch) ||
-        normalizeText(event.description).includes(normalizedSearch) ||
-        normalizeText(event.location).includes(normalizedSearch) ||
-        normalizeText(event.organizer).includes(normalizedSearch) ||
-        normalizeText(event.category).includes(normalizedSearch) ||
-        normalizeText(event.modality).includes(normalizedSearch);
+    const filtered = events
+      .filter((event) => {
+        const matchesSearch =
+          !normalizedSearch ||
+          normalizeText(event.title).includes(normalizedSearch) ||
+          normalizeText(event.description).includes(normalizedSearch) ||
+          normalizeText(event.location).includes(normalizedSearch) ||
+          normalizeText(event.organizer).includes(normalizedSearch) ||
+          normalizeText(event.category).includes(normalizedSearch) ||
+          normalizeText(event.modality).includes(normalizedSearch);
 
-      const matchesDate = matchesDateRange(
-        event.date,
-        filters.dateRange,
-        filters.exactDate,
-        filters.exactMonth
-      );
+        const matchesDate = matchesDateRange(
+          event.date,
+          filters.dateRange,
+          filters.exactDate,
+          filters.exactMonth
+        );
 
-      const matchesCategory =
-        !filters.category || event.category === filters.category;
+        const matchesCategory =
+          !filters.category || event.category === filters.category;
 
-      const matchesModality =
-        !filters.modality || event.modality === filters.modality;
+        const matchesModality =
+          !filters.modality || event.modality === filters.modality;
 
-      const matchesLocation =
-        !filters.location || event.location === filters.location;
+        const matchesLocation =
+          !filters.location || event.location === filters.location;
 
-      return (
-        matchesSearch &&
-        matchesDate &&
-        matchesCategory &&
-        matchesModality &&
-        matchesLocation
-      );
-    });
+        return matchesSearch && matchesDate && matchesCategory && matchesModality && matchesLocation;
+      })
+      .sort((a, b) => new Date(a.date).getTime() - new Date(b.date).getTime()); // Sort by date ascending
+
+    return filtered;
   }, [events, filters]);
 
   const totalPages = Math.max(
