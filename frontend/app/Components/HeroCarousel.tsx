@@ -88,8 +88,8 @@ export default function HeroCarousel({ slides }: HeroCarouselProps) {
             alt={slide.imageAlt}
             className={`absolute inset-0 h-full w-full object-cover transition-all duration-1000 ease-in-out ${
               index === activeIndex
-                ? "scale-100 opacity-100"
-                : "scale-105 opacity-0"
+                ? "opacity-100"
+                : "opacity-0"
             }`}
           />
         ))}
