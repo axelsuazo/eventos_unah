@@ -8,7 +8,12 @@ export const Users: CollectionConfig = {
 
   admin: {
     useAsTitle: "email",
-    defaultColumns: ["email", "role", "createdAt"],
+    defaultColumns: ["email", "role", "updatedAt"],
+  },
+
+  labels: {
+    singular: "Usuario",
+    plural: "Usuarios",
   },
 
   access: {

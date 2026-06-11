@@ -74,6 +74,21 @@ html[data-theme="dark"] {
    Estructura general
    ========================= */
 
+/* Banner de Bienvenida en el Dashboard */
+.dashboard__header::after {
+  content: "Sistema de Gestión de Eventos - Portal Administrativo UNAH";
+  display: block;
+  font-size: 1.1rem;
+  font-weight: 500;
+  color: var(--unah-blue);
+  margin-top: 0.5rem;
+  opacity: 0.8;
+}
+
+html[data-theme="dark"] .dashboard__header::after {
+  color: var(--unah-yellow);
+}
+
 .template-default {
   background:
     radial-gradient(circle at top left, rgba(24, 57, 114, 0.13), transparent 34%),
@@ -175,12 +190,24 @@ html[data-theme="dark"] .nav {
 .doc-header,
 .collection-list__header,
 .list-header {
-  border-top: 4px solid var(--unah-yellow) !important;
+  border-top: 5px solid var(--unah-yellow) !important;
 }
 
 /* =========================
    Cards, listas y tablas
    ========================= */
+
+/* Estilo de tarjetas en el Dashboard */
+.dashboard__card {
+  border-left: 6px solid var(--unah-blue-soft) !important; /* Borde azul más claro */
+  transition: transform 0.2s ease, box-shadow 0.2s ease !important;
+}
+
+.dashboard__card:hover {
+  transform: translateY(-4px);
+  border-left-color: var(--unah-yellow) !important;
+  box-shadow: 0 10px 25px rgba(24, 57, 114, 0.15) !important;
+}
 
 .card,
 .collection-list,
@@ -221,25 +248,16 @@ html[data-theme="dark"] .list-header {
    Botones
    ========================= */
 
-.btn,
-.btn--style-primary,
-.btn--style-secondary,
-.btn--style-pill,
-.btn--style-subtle {
-  border-radius: 999px !important;
-  font-weight: 800 !important;
-}
-
 .btn--style-primary {
-  background-color: var(--unah-blue) !important;
-  border-color: var(--unah-blue) !important;
-  color: #ffffff !important;
+  background-color: var(--unah-blue-soft) !important; /* Fondo azul más claro */
+  border-color: var(--unah-blue-soft) !important; /* Borde azul más claro */
+  color: var(--unah-blue) !important; /* Texto azul oscuro para contraste */
 }
 
 .btn--style-primary:hover,
 .btn--style-primary:focus-visible {
-  background-color: var(--unah-yellow) !important;
-  border-color: var(--unah-yellow) !important;
+  background-color: var(--unah-yellow) !important; /* Usar amarillo definido */
+  border-color: var(--unah-yellow) !important; /* Usar amarillo definido */
   color: var(--unah-blue) !important;
 }
 
