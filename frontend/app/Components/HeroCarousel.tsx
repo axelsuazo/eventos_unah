@@ -86,17 +86,15 @@ export default function HeroCarousel({ slides }: HeroCarouselProps) {
             key={`background-${slide.id}`}
             src={slide.image}
             alt={slide.imageAlt}
-            className={`absolute inset-0 h-full w-full object-cover transition-all duration-1000 ease-in-out ${
-              index === activeIndex
+            className={`absolute inset-0 h-full w-full object-cover transition-all duration-1000 ease-in-out ${index === activeIndex
                 ? "opacity-100"
                 : "opacity-0"
-            }`}
+              }`}
           />
         ))}
       </div>
 
-      <div className="absolute inset-0 -z-10 bg-gradient-to-r from-[#071225]/10 via-[#183972]/5 to-black/25" />
-      <div className="absolute inset-0 -z-10 bg-gradient-to-t from-black/70 via-transparent to-black/20" />
+      <div className="absolute inset-0 -z-10 bg-gradient-to-r from-black/30  " />
 
       <div className="mx-auto grid max-w-7xl items-center gap-10 md:grid-cols-[1.05fr_0.95fr]">
         <div className="relative">
@@ -161,11 +159,10 @@ export default function HeroCarousel({ slides }: HeroCarouselProps) {
                     key={`dot-${slide.id}`}
                     type="button"
                     onClick={() => goToSlide(index)}
-                    className={`h-2.5 rounded-full transition-all duration-300 ${
-                      index === activeIndex
+                    className={`h-2.5 rounded-full transition-all duration-300 ${index === activeIndex
                         ? "w-8 bg-[#f5c400]"
                         : "w-2.5 bg-white/40 hover:bg-white"
-                    }`}
+                      }`}
                     aria-label={`Ir a la diapositiva ${index + 1}`}
                   />
                 ))}
@@ -174,7 +171,7 @@ export default function HeroCarousel({ slides }: HeroCarouselProps) {
           )}
         </div>
 
-      
+
       </div>
     </section>
   );

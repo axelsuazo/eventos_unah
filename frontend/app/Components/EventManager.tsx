@@ -207,7 +207,7 @@ export default function EventManager({
           </p>
 
           <h2 className="mt-3 text-3xl font-black leading-tight text-[#183972] dark:text-slate-100 sm:text-4xl md:text-5xl">
-            UNAH Eventos informate y participa
+            UNAH Eventos Participa e informate de las actividades
           </h2>
         </div>
 
@@ -216,7 +216,7 @@ export default function EventManager({
             
               <div className="relative mx-auto flex w-full max-w-2xl items-center">
                 <input
-                  type="text"
+                  type="search"
                   value={searchInput}
                   onChange={(event) => setSearchInput(event.target.value)}
                   placeholder="Buscar eventos por nombre, lugar, categoría..."
