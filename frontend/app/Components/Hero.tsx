@@ -21,7 +21,19 @@ const FALLBACK_SLIDE: HeroSlide = {
 export default async function Hero() {
   const { events } = await getEventsResult();
 
-  const apiSlides: HeroSlide[] = events.slice(0, 6).map((event) => ({
+  const now = Date.now();
+  // Ordenamos los eventos antes de seleccionar los 6 que aparecerán en el carrusel
+  const sortedEvents = [...events].sort((a, b) => {
+    const timeA = new Date(a.date).getTime();
+    const timeB = new Date(b.date).getTime();
+    const isPastA = timeA < now;
+    const isPastB = timeB < now;
+
+    if (isPastA !== isPastB) return isPastA ? 1 : -1;
+    return timeA - timeB;
+  });
+
+  const apiSlides: HeroSlide[] = sortedEvents.slice(0, 6).map((event) => ({
     id: event.id,
     title: event.title,
     subtitle: event.category || "Evento UNAH",

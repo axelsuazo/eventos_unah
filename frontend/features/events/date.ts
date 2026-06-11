@@ -121,3 +121,36 @@ export function getEventWeek(dateValue: string) {
 
   return `${tempDate.getUTCFullYear()}-W${String(weekNumber).padStart(2, "0")}`;
 }
+
+export function startOfDay(date: Date) {
+  const result = new Date(date);
+  result.setHours(0, 0, 0, 0);
+  return result;
+}
+
+export function addDays(date: Date, days: number) {
+  const result = new Date(date);
+  result.setDate(result.getDate() + days);
+  return result;
+}
+
+export function isSameDay(firstDate: Date, secondDate: Date) {
+  return firstDate.getTime() === secondDate.getTime();
+}
+
+export function startOfWeek(date: Date) {
+  const result = startOfDay(date);
+  const day = result.getDay();
+  const diff = day === 0 ? -6 : 1 - day;
+
+  result.setDate(result.getDate() + diff);
+
+  return result;
+}
+
+export function endOfWeek(date: Date) {
+  const result = startOfWeek(date);
+  result.setDate(result.getDate() + 6);
+
+  return result;
+}

@@ -1,10 +1,16 @@
 "use client";
 
-import type { FormEvent } from "react";
-import { useMemo, useState } from "react";
+import { useMemo, useState, useEffect } from "react";
 import EventCard from "@/app/Components/EventCard";
 
-import { formatEventDate } from "@/features/events/date";
+import { 
+  formatEventDate, 
+  startOfDay, 
+  addDays, 
+  isSameDay, 
+  startOfWeek, 
+  endOfWeek 
+} from "@/features/events/date";
 import {
   getImageUrl,
   getModalityBadgeClass,
@@ -56,9 +62,21 @@ export default function EventManager({
   const [events] = useState<EventItem[]>(initialEvents);
   const [filters, setFilters] = useState<Filters>(emptyFilters);
   const [searchInput, setSearchInput] = useState(emptyFilters.search);
+  const [debouncedSearch, setDebouncedSearch] = useState(emptyFilters.search);
   const [selectedEvent, setSelectedEvent] = useState<EventItem | null>(null);
   const [loadError] = useState<string | null>(initialLoadError);
   const [currentPage, setCurrentPage] = useState(1);
+
+  // Implementación de Debounce para la búsqueda
+  useEffect(() => {
+    const timer = setTimeout(() => {
+      setDebouncedSearch(searchInput);
+      setFilters(prev => ({ ...prev, search: searchInput }));
+      setCurrentPage(1);
+    }, 300);
+
+    return () => clearTimeout(timer);
+  }, [searchInput]);
 
   const categoryOptions = useMemo(() => {
     return getUniqueOptions(events.map((event) => event.category));
@@ -86,41 +104,49 @@ export default function EventManager({
     hasAdvancedFilters;
 
   const filteredEvents = useMemo(() => {
-    const normalizedSearch = normalizeText(filters.search);
+    const normalizedSearch = normalizeText(debouncedSearch);
+    const searchWords = normalizedSearch.split(/\s+/).filter(word => word.length > 0);
 
-    const filtered = events
-      .filter((event) => {
-        const matchesSearch =
-          !normalizedSearch ||
-          normalizeText(event.title).includes(normalizedSearch) ||
-          normalizeText(event.description).includes(normalizedSearch) ||
-          normalizeText(event.location).includes(normalizedSearch) ||
-          normalizeText(event.organizer).includes(normalizedSearch) ||
-          normalizeText(event.category).includes(normalizedSearch) ||
-          normalizeText(event.modality).includes(normalizedSearch);
+    return events.filter((event) => {
+      // Búsqueda inteligente: cada palabra buscada debe estar en al menos uno de los campos
+      const eventFields = [
+        event.title,
+        event.description,
+        event.location,
+        event.organizer,
+        event.category,
+        event.modality
+      ].map(normalizeText);
 
-        const matchesDate = matchesDateRange(
-          event.date,
-          filters.dateRange,
-          filters.exactDate,
-          filters.exactMonth
-        );
+      const matchesSearch = searchWords.every(word => 
+        eventFields.some(field => field.includes(word))
+      );
 
-        const matchesCategory =
-          !filters.category || event.category === filters.category;
+      const matchesDate = matchesDateRange(
+        event.date,
+        filters.dateRange,
+        filters.exactDate,
+        filters.exactMonth
+      );
 
-        const matchesModality =
-          !filters.modality || event.modality === filters.modality;
+      const matchesCategory =
+        !filters.category || event.category === filters.category;
 
-        const matchesLocation =
-          !filters.location || event.location === filters.location;
+      const matchesModality =
+        !filters.modality || event.modality === filters.modality;
 
-        return matchesSearch && matchesDate && matchesCategory && matchesModality && matchesLocation;
-      })
-      .sort((a, b) => new Date(a.date).getTime() - new Date(b.date).getTime()); // Sort by date ascending
+      const matchesLocation =
+        !filters.location || event.location === filters.location;
 
-    return filtered;
-  }, [events, filters]);
+      return (
+        matchesSearch &&
+        matchesDate &&
+        matchesCategory &&
+        matchesModality &&
+        matchesLocation
+      );
+    });
+  }, [events, filters, debouncedSearch]);
 
   const totalPages = Math.max(
     1,
@@ -155,11 +181,6 @@ export default function EventManager({
     setCurrentPage(1);
   }
 
-  function submitSearch(event: FormEvent<HTMLFormElement>) {
-    event.preventDefault();
-    updateFilter("search", searchInput);
-  }
-
   function clearFilters() {
     setSearchInput("");
     setFilters(emptyFilters);
@@ -186,30 +207,34 @@ export default function EventManager({
           </p>
 
           <h2 className="mt-3 text-3xl font-black leading-tight text-[#183972] dark:text-slate-100 sm:text-4xl md:text-5xl">
-        UNAH Eventos 
+            UNAH Eventos informate y participa
           </h2>
         </div>
 
-        <form onSubmit={submitSearch} className="mt-8 w-full">
+        <div className="mt-8 w-full">
           <div className="mx-auto w-full max-w-5xl">
-            <div className="rounded-[2rem] border border-gray-100 bg-white/90 p-3 shadow-lg shadow-slate-900/5 dark:border-slate-800 dark:bg-slate-900/80">
+            
               <div className="relative mx-auto flex w-full max-w-2xl items-center">
                 <input
-                  type="search"
+                  type="text"
                   value={searchInput}
                   onChange={(event) => setSearchInput(event.target.value)}
                   placeholder="Buscar eventos por nombre, lugar, categoría..."
-                  className="h-12 w-full min-w-0 rounded-full border border-gray-200 bg-white px-5 pr-14 text-sm font-semibold text-gray-700 outline-none transition-all duration-300 placeholder:text-gray-400 focus:border-[#183972] focus:ring-4 focus:ring-[#183972]/10 dark:border-slate-700 dark:bg-slate-950 dark:text-slate-100 dark:placeholder:text-slate-500 sm:px-7 sm:pr-16 sm:text-base"
+                  className="h-14 w-full min-w-0 rounded-full border-2 border-gray-200 bg-white px-6 pr-14 text-sm font-semibold text-gray-700 shadow-sm outline-none transition-all duration-300 placeholder:text-gray-400 focus:border-[#183972] focus:ring-4 focus:ring-[#183972]/10 dark:border-slate-700 dark:bg-slate-900 dark:text-slate-100 dark:placeholder:text-slate-500 sm:px-8 sm:text-base"
                 />
 
-                <button
-                  type="submit"
-                  className="absolute right-1 top-1/2 flex h-10 w-10 -translate-y-1/2 items-center justify-center rounded-full bg-[#183972] text-white shadow-md transition-all duration-300 hover:bg-[#f5c400] hover:text-[#183972] active:scale-95 dark:bg-yellow-300 dark:text-[#183972] dark:hover:bg-yellow-200 sm:right-1.5"
-                  aria-label="Buscar eventos"
-                >
+                <div className="absolute right-2 top-1/2 flex -translate-y-1/2 items-center gap-2">
+                  {searchInput && (
+                    <button
+                      onClick={() => setSearchInput("")}
+                      className="flex h-8 w-8 items-center justify-center rounded-full text-gray-400 hover:bg-gray-100 hover:text-gray-600 dark:hover:bg-slate-800"
+                    >
+                      <span className="text-xl">×</span>
+                    </button>
+                  )}
                   <svg
                     xmlns="http://www.w3.org/2000/svg"
-                    className="h-5 w-5 sm:h-6 sm:w-6"
+                    className="mr-3 h-6 w-6 text-[#183972] dark:text-yellow-400"
                     fill="none"
                     viewBox="0 0 24 24"
                     stroke="currentColor"
@@ -221,12 +246,12 @@ export default function EventManager({
                       d="m21 21-4.35-4.35m1.1-5.4a6.5 6.5 0 1 1-13 0 6.5 6.5 0 0 1 13 0Z"
                     />
                   </svg>
-                </button>
+                </div>
               </div>
 
               {showAdvancedFilters && (
-                <div className="mt-5 animate-[fadeIn_.35s_ease-in-out] rounded-3xl border border-gray-100 bg-gray-50/90 p-4 dark:border-slate-800 dark:bg-slate-950/70">
-                  <div className="grid gap-3 sm:grid-cols-2 lg:grid-cols-5">
+                <div className="mt-6 animate-[fadeIn_.35s_ease-in-out] rounded-3xl border border-gray-200 bg-white p-5 shadow-xl dark:border-slate-800 dark:bg-slate-900">
+                  <div className="grid gap-4 sm:grid-cols-2 lg:grid-cols-4">
                     <FilterSelect
                       label="Fecha"
                       value={filters.dateRange}
@@ -332,11 +357,11 @@ export default function EventManager({
                   </div>
                 </div>
               )}
-            </div>
+         
           </div>
-        </form>
+        </div>
 
-        <div className="mt-5 flex flex-col gap-2 rounded-2xl bg-white/70 px-4 py-3 text-center shadow-sm dark:bg-slate-900/60 sm:flex-row sm:items-center sm:justify-between sm:text-left">
+        <div className="mt-5 flex flex-col gap-2 rounded-[0.5rem] e/70 px-4 py-3 text-center shadow-sm dark:bg-slate-900/60 sm:flex-row sm:items-center sm:justify-between sm:text-left">
           <p className="text-sm font-semibold text-gray-600 dark:text-slate-300">
             Mostrando {paginationStart}-{paginationEnd} de{" "}
             {filteredEvents.length} eventos.
@@ -696,39 +721,4 @@ function matchesDateRange(
   }
 
   return true;
-}
-
-function startOfDay(date: Date) {
-  const result = new Date(date);
-  result.setHours(0, 0, 0, 0);
-
-  return result;
-}
-
-function addDays(date: Date, days: number) {
-  const result = new Date(date);
-  result.setDate(result.getDate() + days);
-
-  return result;
-}
-
-function isSameDay(firstDate: Date, secondDate: Date) {
-  return firstDate.getTime() === secondDate.getTime();
-}
-
-function startOfWeek(date: Date) {
-  const result = startOfDay(date);
-  const day = result.getDay();
-  const diff = day === 0 ? -6 : 1 - day;
-
-  result.setDate(result.getDate() + diff);
-
-  return result;
-}
-
-function endOfWeek(date: Date) {
-  const result = startOfWeek(date);
-  result.setDate(result.getDate() + 6);
-
-  return result;
 }
